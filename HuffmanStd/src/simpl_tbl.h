@@ -2,7 +2,7 @@
 
 struct simpl_entry {
   char key;
-  void * value;
+  int value;
 };
 
 typedef struct simpl_entry * s_entry;
@@ -22,3 +22,8 @@ s_table init_table(int n_entries, int init_tab_size, s_entry * entries);
 void add_entry(s_table table, s_entry new_entry);
 void remove_entry(s_table table, char key);
 void * get_value(s_table table, char key);
+
+/*
+ * Entries function
+ */
+s_entry create_entry(char key, int value);

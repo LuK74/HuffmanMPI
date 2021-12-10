@@ -23,13 +23,33 @@ tree new_node(char value, int frequency, tree left, tree right) {
   return node;
 }
 
+
+void explore_and_fill(tree node, s_table table) {
+  if (node->frequency != -1) {
+    s_entry entry = create_entry(node->value, node->frequency);
+    add_entry(table, entry);
+  }
+
+  if (node->left != NULL) {
+    explore_and_fill(node->left, table);
+  }
+
+  if (node->right != NULL) {
+    explore_and_fill(node->right, table);
+  }
+}
+
 /*
  * Huffman export to table
  */
 s_table convert_to_tbl(tree root) {
   s_table table = init_table(0, 0, NULL); 
+
+  if (root != NULL) {
+    explore_and_fill(root, table);
+  }
   
-  return NULL;
+  return table;
 }
 
 /*

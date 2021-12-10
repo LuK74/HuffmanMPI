@@ -30,11 +30,12 @@ void add_entry(s_table table, s_entry new_entry) {
     }
 
     free(old_entries);
-    
-  }
 
     table->entries[table->n_entries] = new_entry;
     table->n_entries = table->n_entries + 1;
+
+  }
+
 }
 
 void remove_entry(s_table table, char key) {
@@ -75,4 +76,15 @@ void * get_value(s_table table, char key) {
     }
   }
   return NULL;
+}
+
+/*
+ * Create an entry with the given fields
+ */
+s_entry create_entry(char key, int value) {
+  s_entry new_entry = malloc(sizeof(struct simpl_entry));
+  new_entry->key = key;
+  new_entry->value = value;
+
+  return new_entry;
 }
