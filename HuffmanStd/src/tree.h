@@ -15,6 +15,7 @@
 struct node {
   int frequency;
   char value;
+  int flag; // Set to -1 if leaf, if not set to 0
   struct node * left;
   struct node * right;
 };
@@ -26,12 +27,17 @@ typedef struct node * tree;
  */
 void add_left(tree parent, tree left);
 void add_right(tree parent, tree right);
-tree new_node(char value, int frequency, tree left, tree right);
+tree new_node(char value, int frequency, int flag, tree left, tree right);
 
 /*
  * Huffman export to table
  */
 s_table convert_to_tbl(tree root);
+
+/*
+ * HUffman tree from table
+ */
+tree convert_from_tbl(s_table table);
 
 /*
  * Export & Import functions
