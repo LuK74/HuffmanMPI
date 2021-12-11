@@ -2,7 +2,8 @@
 
 struct simpl_entry {
   char key;
-  int value;
+  int occurences;
+  int frequency;
 };
 
 typedef struct simpl_entry * s_entry;
@@ -26,4 +27,10 @@ void * get_value(s_table table, char key);
 /*
  * Entries function
  */
-s_entry create_entry(char key, int value);
+s_entry create_entry(char key, int occurences, int frequency);
+
+/*
+ * More specific functions
+ */
+int increment_entry(s_table table, char key);
+void build_frequency(s_table table, int total_occurences);

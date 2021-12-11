@@ -69,10 +69,10 @@ void remove_entry(s_table table, char key) {
   
 }
 
-void * get_value(s_table table, char key) {
+s_entry get_entry(s_table table, char key) {
   for (int i = 0; i < table->n_entries; i++) {
     if (((table->entries)[i])->key == key) {
-      return ((table->entries)[i])->value;
+      return ((table->entries)[i]);
     }
   }
   return NULL;
@@ -81,10 +81,38 @@ void * get_value(s_table table, char key) {
 /*
  * Create an entry with the given fields
  */
-s_entry create_entry(char key, int value) {
+s_entry create_entry(char key, int occurences, int frequency) {
   s_entry new_entry = malloc(sizeof(struct simpl_entry));
   new_entry->key = key;
-  new_entry->value = value;
+  new_entry->occurences = occurences;
+  new_entry->frequency = frequency;
 
   return new_entry;
+}
+
+/*
+ * Increment the value of an entry IF it does exist
+ * Return 0 if the entry exist and it has been incremented
+ * Return -1 if the entry doesn't exist 
+ */
+int increment_entry(s_table table, char key) {
+  s_entry entry = get_entry(table, key);
+
+  if (entry == NULL) {
+    return -1;
+  }
+
+  entry->occurences = entry->occurences + 1;
+  
+  return 0;
+}
+
+/*
+ * Given a total number of occurences, will build the frequency
+ * value in each entry
+ */
+void build_frequency(s_table table, int total_occurences) {
+  for (int i = 0; i < table->n_entries; i++) {
+    ((table->entries)[i])->frequency = (((table->entries)[i])->occurences) / total_occurences;
+  }
 }
