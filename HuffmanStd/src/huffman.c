@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "tree.h"
 
 
@@ -80,16 +83,15 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
   return 0;
 }
 
-int decompress(FILE * input, FILE * output) {
-  rewind(input);
-
+int decompress(int input_fd, FILE * output) {
   int * padding = malloc(sizeof(int));
-  s_table table = read_table(input, padding);
+  s_table table = read_table(input_fd, padding);
   tree root = convert_from_tbl(table);
 
   tree current_node = root;
     
-  char c = fgetc(input);
+  char c;
+  read(input_fd, &c, 1);
   int direction = 0;
   
   while (c != EOF) {
@@ -111,15 +113,14 @@ int decompress(FILE * input, FILE * output) {
 	current_node = current_node->left;
       }
     }
-
-    c = fgetc(input);
+    read(input_fd, &c, 1);
   }
 
   return 0;
 }
 
 int test(char * input) {
-  FILE * input_file = fopen(input, "r");
+  FILE * input_file = fopen(input, "rb");
   s_table table = generate_table(input_file);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
@@ -131,10 +132,10 @@ int test(char * input) {
   export_tree(root, "test_tree.txt");
 
   FILE * new_output = fopen("test_decompressed_output.txt", "w");
-  FILE * new_input = fopen("test_compressed_output.txt", "r");
+  int new_input = open("test_compressed_output.txt", O_CREAT, S_IRUSR | S_IWUSR);
   decompress(new_input, new_output);
   fclose(new_output);
-  fclose(new_input);
+  close(new_input);
 
   return 0;
 }

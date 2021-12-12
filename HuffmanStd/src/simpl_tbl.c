@@ -1,4 +1,9 @@
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "simpl_tbl.h"
 
 /*
@@ -172,33 +177,60 @@ void write_table(FILE * output, s_table table, int padding, int total_occ) {
     fprintf(output, "%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
   }
 
-  fprintf(output, "END\n");
+  fprintf(output, "-END\n");
 }
 
+void parse_line(FILE * input, char * key, int * occurences) {
+  //char c = fgetc(input);
+  
+}
+
+char * read_line(int fd) {
+  char * line = malloc(sizeof(char)*100);
+  char c;
+  int size = 0;
+  int res = read(fd, &c, 1);
+  if (res == 0) return NULL;
+
+  while ((c != EOF && size < 99 && c != '\n') || (c == '\n' && size == 0)) {
+    line[size] = c;
+    size++;
+    read(fd, &c, 1);
+  }
+
+  line[size] = '\n';
+
+  return line;
+}
 
 /*
  * Read table from huffman compressed file
  */
-s_table read_table(FILE * input, int * padding) {
+s_table read_table(int input_fd, int * padding) {
   s_table table = init_table(0,0, NULL);
-
+  
   int total_occ = 0;
-  
-  fscanf(input, "Padding=%d\n", padding);
-  fscanf(input, "Size=%d\n", &total_occ); 
-  
-  char * str = malloc(sizeof(char)*100);
-  fscanf(input,"%s\n", str);
+  char * str = read_line(input_fd);
+  sscanf(str, "Padding=%d\n", padding);
+  free(str);
 
-  while(strcmp(str, "END") != 0) {
-    char key = str[0];
+  str = read_line(input_fd);
+  sscanf(str, "Size=%d\n", &total_occ); 
+  free(str);
+
+  str = read_line(input_fd);
+  char key = str[0];
+  
+  while(str != NULL && strcmp(str, "-END\n") != 0) {
     int occurences;
-    sscanf(str, "[^]:%d", &occurences);
+    sscanf(str, "[^]:%d\n", &occurences);
 
     s_entry entry = create_entry(key, occurences,(float)((float)(occurences)/(float)(total_occ)));
     add_entry(table, entry);
 
-    fscanf(input,"%s\n", str);
+    free(str);
+    str = read_line(input_fd);
+    if (str != NULL) key = str[0];
   }
 
   return table;

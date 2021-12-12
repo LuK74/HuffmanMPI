@@ -42,5 +42,5 @@ int set_encoding(s_table table, char key, char * encoding);
 /*
  * Import & Export Table
  */
-s_table read_table(FILE * input, int * padding);
+s_table read_table(int fd, int * padding);
 void write_table(FILE * output, s_table table, int padding, int total_occ);
