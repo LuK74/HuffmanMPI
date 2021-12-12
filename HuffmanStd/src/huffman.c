@@ -38,6 +38,8 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
     entry = get_entry(table, c);
     if (entry == NULL) return -1;
     for (int i = 0; entry->encoding[i] != '\n'; i++) {
+      if (curr_size != 0) to_print = to_print<<1;
+      
       to_print = to_print | ((entry->encoding[i]) - '0');
       curr_size++;
 
@@ -47,9 +49,9 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
 	curr_size = 0;
 
 	total_size++;
-      } else {
-	to_print = to_print<<1;
-      }
+      } //else {
+	//to_print = to_print<<1;
+      //}
       
     }
     c = fgetc(input);
@@ -57,8 +59,9 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
 
   int padding = 0;
   if (curr_size != 0) {
-    write(tube[1], &to_print, 1);
     padding = 8-curr_size;
+    to_print = to_print<<padding;
+    write(tube[1], &to_print, 1); 
     total_size++;
   }
 
@@ -90,11 +93,16 @@ int decompress(FILE * input, FILE * output) {
   tree current_node = root;
     
   char c = fgetc(input);
+  char next = fgetc(input);
   int direction = 0;
   
   while (c != EOF) {
-    for (int i = 7; i >= 0; i--) {
-
+    int limit = 0;
+    if (next == EOF) {
+      limit = *padding;
+    }
+    
+    for (int i = 7; i >= limit; i--) {
       if (current_node != NULL) {
 	if (current_node->flag == -1) {
 	  fputc(current_node->value, output);
@@ -112,9 +120,17 @@ int decompress(FILE * input, FILE * output) {
       }
     }
 
-    c = fgetc(input);
-  }
+    c = next;
+    next = fgetc(input);
+  }  
 
+  if (current_node != NULL) {
+    if (current_node->flag == -1) {
+      fputc(current_node->value, output);
+      current_node = root;
+    }
+  }
+  
   return 0;
 }
 

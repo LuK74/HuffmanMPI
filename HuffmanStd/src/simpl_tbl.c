@@ -169,7 +169,7 @@ void write_table(FILE * output, s_table table, int padding, int total_occ) {
   fprintf(output, "Size=%d\n", total_occ);
 
   for (int i = 0; i < table->n_entries; i++) {
-    fprintf(output, "%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
+    fprintf(output, "Key=%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
   }
 
   fprintf(output, "END\n");
@@ -188,17 +188,23 @@ s_table read_table(FILE * input, int * padding) {
   fscanf(input, "Size=%d\n", &total_occ); 
   
   char * str = malloc(sizeof(char)*100);
-  fscanf(input,"%s\n", str);
+  char key;
+  int occurences = 0;
+  int _read = fscanf(input, "Key=%c:%d\n", &key, &occurences);
 
   while(strcmp(str, "END") != 0) {
-    char key = str[0];
-    int occurences;
-    sscanf(str, "[^]:%d", &occurences);
+    //char key = str[0];
+    //int occurences;
+    //sscanf(str, "Key=%c:%d\n", &key ,&occurences);
 
     s_entry entry = create_entry(key, occurences,(float)((float)(occurences)/(float)(total_occ)));
     add_entry(table, entry);
 
-    fscanf(input,"%s\n", str);
+    _read = fscanf(input, "Key=%c:%d\n", &key, &occurences);
+    if (_read == 0) {
+      fscanf(input, "%s\n", str);
+    }
+    
   }
 
   return table;
