@@ -1,9 +1,11 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 struct simpl_entry {
   char key;
   int occurences;
-  int frequency;
+  float frequency;
+  char * encoding;
 };
 
 typedef struct simpl_entry * s_entry;
@@ -28,9 +30,17 @@ void * get_value(s_table table, char key);
  * Entries function
  */
 s_entry create_entry(char key, int occurences, int frequency);
+s_entry get_entry(s_table table, char key);
 
 /*
  * More specific functions
  */
 int increment_entry(s_table table, char key);
 void build_frequency(s_table table, int total_occurences);
+int set_encoding(s_table table, char key, char * encoding);
+
+/*
+ * Import & Export Table
+ */
+s_table read_table(FILE * input, int * padding);
+void write_table(FILE * output, s_table table, int padding, int total_occ);

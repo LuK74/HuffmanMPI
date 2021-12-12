@@ -92,6 +92,44 @@ tree convert_from_tbl(s_table table) {
   return parent;  
 }
 
+void explore_tree_encoding(s_table table, tree node, int encoding, int depth) {
+  if (node->flag == -1) {
+    char * encoding_str = malloc(sizeof(char)*(depth+1));
+    for (int i = 0; i < depth; i++) {
+      encoding_str[(depth-1)-i] = '0' + ((encoding>>i)&1);
+    }
+    encoding_str[depth] = '\n';
+    set_encoding(table, node->value, encoding_str);
+    
+  } else {
+    if (node->left != NULL) {
+      explore_tree_encoding(table, node->left, encoding<<1, depth+1);
+    }
+    if (node->right != NULL) {
+      explore_tree_encoding(table, node->right, (encoding<<1)+1, depth+1);
+    }
+  }
+}
+
+/*
+ * Fill encoding fields of a table
+ */
+void fill_encoding(tree root, s_table table) {
+  if (root->flag == -1) {
+    char * encoding_str = malloc(sizeof(char)*1);
+    encoding_str[0] = '0';
+
+    set_encoding(table, root->value, encoding_str);
+    
+  } else {
+    if (root->left != NULL) {
+      explore_tree_encoding(table, root->left, 0, 1);
+    }
+    if (root->right != NULL) {
+      explore_tree_encoding(table, root->right, 1, 1);
+    }
+  }
+}
 
 /*
  * Export & Import functions
@@ -120,13 +158,7 @@ void explore_tree(tree node, int encoding, int depth, FILE * fp) {
 void export_tree(tree root, char * filename) {
   FILE * file = fopen(filename, "w");
   if (root->flag == -1) {
-    char * encoding_str = malloc(sizeof(char)*4);
-    encoding_str[3] = '\n';
-    encoding_str[2] = root->value;
-    encoding_str[1] = ':';
-    encoding_str[0] = '0';
-
-    fprintf(file, encoding_str);
+    fprintf(file, "%c:%f" , root->value, root->frequency);
   } else {
     if (root->left != NULL) {
       explore_tree(root->left, 0, 1, file);
@@ -139,4 +171,20 @@ void export_tree(tree root, char * filename) {
   fclose(file);
 }
 
-tree inport_tree(tree root, char * filename);
+void write_tree(tree root, FILE * output) {
+  if (root->flag == -1) { 
+    fprintf(output, "%c:%f" , root->value, root->frequency);
+  }
+  else {
+    if (root->left != NULL) {
+      explore_tree(root->left, 0, 1, output);
+    }
+    if (root->right != NULL) {
+      explore_tree(root->right, 1, 1, output);
+    }
+  }
+}
+
+tree read_tree(FILE * input, int * padding) {
+  return NULL;
+}

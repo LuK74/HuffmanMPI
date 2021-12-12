@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "simpl_tbl.h"
 
 /*
@@ -13,7 +14,7 @@
  */
 
 struct node {
-  int frequency;
+  float frequency;
   char value;
   int flag; // Set to -1 if leaf, if not set to 0
   struct node * left;
@@ -40,7 +41,13 @@ s_table convert_to_tbl(tree root);
 tree convert_from_tbl(s_table table);
 
 /*
+ * Fill encoding fields of a table
+ */
+void fill_encoding(tree root, s_table);
+
+/*
  * Export & Import functions
  */
 void export_tree(tree root, char * filename);
-tree inport_tree(tree root, char * filename);
+void write_tree(tree root, FILE * file);
+tree read_tree(FILE * input, int * padding);

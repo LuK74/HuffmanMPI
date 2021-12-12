@@ -1,3 +1,4 @@
+#include <string.h>
 #include "simpl_tbl.h"
 
 /*
@@ -99,6 +100,7 @@ s_entry create_entry(char key, int occurences, int frequency) {
   new_entry->key = key;
   new_entry->occurences = occurences;
   new_entry->frequency = frequency;
+  new_entry->encoding = 0;
   
   return new_entry;
 }
@@ -115,6 +117,7 @@ int increment_entry(s_table table, char key) {
   if (index == -1) {
     entry = create_entry(key, 0, 0);
     add_entry(table, entry);
+    index = get_entry_index(table, key);
   } else {
     entry = table->entries[index];
   } 
@@ -141,6 +144,62 @@ int increment_entry(s_table table, char key) {
  */
 void build_frequency(s_table table, int total_occurences) {
   for (int i = 0; i < table->n_entries; i++) {
-    ((table->entries)[i])->frequency = (((table->entries)[i])->occurences) / total_occurences;
+    ((table->entries)[i])->frequency = ((float)(((table->entries)[i])->occurences)) / ((float)total_occurences);
   }
+}
+
+/*
+ * Set encoding for an entry
+ * Return -1 if the entry doesn't exist
+ * Return 0 if the function executed properly
+ */
+int set_encoding(s_table table, char key, char * encoding) {
+  s_entry entry = get_entry(table, key);
+
+  if (entry != NULL) {
+    entry->encoding = encoding;
+    return 0;
+  }
+
+  return -1;
+}
+
+void write_table(FILE * output, s_table table, int padding, int total_occ) {
+  fprintf(output, "Padding=%d\n", padding);
+  fprintf(output, "Size=%d\n", total_occ);
+
+  for (int i = 0; i < table->n_entries; i++) {
+    fprintf(output, "%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
+  }
+
+  fprintf(output, "END\n");
+}
+
+
+/*
+ * Read table from huffman compressed file
+ */
+s_table read_table(FILE * input, int * padding) {
+  s_table table = init_table(0,0, NULL);
+
+  int total_occ = 0;
+  
+  fscanf(input, "Padding=%d\n", padding);
+  fscanf(input, "Size=%d\n", &total_occ); 
+  
+  char * str = malloc(sizeof(char)*100);
+  fscanf(input,"%s\n", str);
+
+  while(strcmp(str, "END") != 0) {
+    char key = str[0];
+    int occurences;
+    sscanf(str, "[^]:%d", &occurences);
+
+    s_entry entry = create_entry(key, occurences,(float)((float)(occurences)/(float)(total_occ)));
+    add_entry(table, entry);
+
+    fscanf(input,"%s\n", str);
+  }
+
+  return table;
 }
