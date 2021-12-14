@@ -4,7 +4,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 MKDIR = mkdir
 
-CC = gcc
+CC = g++
 
 all : directories huffman
 
@@ -20,18 +20,18 @@ $(BIN_DIR) :
 
 huffman : huffman.o tree.o simpl_tbl.o
 	@echo "\nLinking objects"
-	gcc -g -o $(BIN_DIR)/$@ $(OBJ_DIR)/huffman.o $(OBJ_DIR)/tree.o $(OBJ_DIR)/simpl_tbl.o
+	$(CC) -g -o $(BIN_DIR)/$@ $(OBJ_DIR)/huffman.o $(OBJ_DIR)/tree.o $(OBJ_DIR)/simpl_tbl.o
 
 #### .o
 
 huffman.o : $(SRC_DIR)/huffman.c
-	gcc -c $(FLAGS) $(SRC_DIR)/huffman.c -o $(OBJ_DIR)/huffman.o
+	$(CC) -c $(FLAGS) $(SRC_DIR)/huffman.c -o $(OBJ_DIR)/huffman.o
 
 tree.o : $(SRC_DIR)/tree.c
-	gcc -c $(FLAGS) $(SRC_DIR)/tree.c -o $(OBJ_DIR)/tree.o
+	$(CC) -c $(FLAGS) $(SRC_DIR)/tree.c -o $(OBJ_DIR)/tree.o
 
 simpl_tbl.o : $(SRC_DIR)/simpl_tbl.c
-	gcc -c $(FLAGS) $(SRC_DIR)/simpl_tbl.c -o $(OBJ_DIR)/simpl_tbl.o
+	$(CC) -c $(FLAGS) $(SRC_DIR)/simpl_tbl.c -o $(OBJ_DIR)/simpl_tbl.o
 
 
 #### clear / clean

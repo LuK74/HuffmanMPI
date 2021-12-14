@@ -6,7 +6,7 @@
  * init_tab_size correspond to the initial size of the array entries
  */
 s_table init_table(int n_entries, int init_tab_size, s_entry * entries) {
-  s_table table = malloc(sizeof(table));
+  s_table table = (s_table) malloc(sizeof(table));
   table->n_entries = n_entries;
   table->tab_size = init_tab_size;
   table->entries = entries;
@@ -29,7 +29,7 @@ void add_entry(s_table table, s_entry new_entry) {
     }
     table->tab_size = table->tab_size * 2;
     
-    table->entries = malloc(sizeof(struct simpl_entry)*(table->tab_size));
+    table->entries = (s_entry*) malloc(sizeof(struct simpl_entry)*(table->tab_size));
     for (int i = 0; i < table->n_entries; i++) {
       (table->entries)[i] = old_entries[i];
     }
@@ -63,7 +63,7 @@ void remove_entry(s_table table, char key) {
     s_entry * old_entries = table->entries;
     table->tab_size = (table->tab_size / 2) + 1;
     
-    table->entries = malloc(sizeof(struct simpl_entry)*(table->tab_size));
+    table->entries = (s_entry*) malloc(sizeof(struct simpl_entry)*(table->tab_size));
     for (int i = 0; i < table->n_entries; i++) {
       (table->entries)[i] = old_entries[i];
     }
@@ -96,7 +96,7 @@ int get_entry_index(s_table table, char key) {
  * Create an entry with the given fields
  */
 s_entry create_entry(char key, int occurences, int frequency) {
-  s_entry new_entry = malloc(sizeof(struct simpl_entry));
+  s_entry new_entry = (s_entry) malloc(sizeof(struct simpl_entry));
   new_entry->key = key;
   new_entry->occurences = occurences;
   new_entry->frequency = frequency;
@@ -187,7 +187,7 @@ s_table read_table(FILE * input, int * padding) {
   fscanf(input, "Padding=%d\n", padding);
   fscanf(input, "Size=%d\n", &total_occ); 
   
-  char * str = malloc(sizeof(char)*100);
+  char * str = (char *) malloc(sizeof(char)*100);
   char key;
   int occurences = 0;
   int _read = fscanf(input, "Key=%c:%d\n", &key, &occurences);

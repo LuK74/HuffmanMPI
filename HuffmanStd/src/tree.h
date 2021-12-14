@@ -29,11 +29,7 @@ typedef struct node * tree;
 void add_left(tree parent, tree left);
 void add_right(tree parent, tree right);
 tree new_node(char value, int frequency, int flag, tree left, tree right);
-
-/*
- * Huffman export to table
- */
-s_table convert_to_tbl(tree root);
+tree node_from_entry(s_entry entry);
 
 /*
  * HUffman tree from table
@@ -46,8 +42,7 @@ tree convert_from_tbl(s_table table);
 void fill_encoding(tree root, s_table);
 
 /*
- * Export & Import functions
+ * Export
  */
-void export_tree(tree root, char * filename);
-void write_tree(tree root, FILE * file);
-tree read_tree(FILE * input, int * padding);
+void export_tree(tree root, char filename[]);
+void write_tree(tree root, FILE * output);

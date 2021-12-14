@@ -24,13 +24,13 @@ typedef struct simpl_table * s_table;
 s_table init_table(int n_entries, int init_tab_size, s_entry * entries);
 void add_entry(s_table table, s_entry new_entry);
 void remove_entry(s_table table, char key);
-void * get_value(s_table table, char key);
 
 /*
  * Entries function
  */
 s_entry create_entry(char key, int occurences, int frequency);
 s_entry get_entry(s_table table, char key);
+int get_entry_index(s_table table, char key);
 
 /*
  * More specific functions

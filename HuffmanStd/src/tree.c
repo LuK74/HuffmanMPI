@@ -15,7 +15,7 @@ void add_right(tree parent, tree right) {
 }
 
 tree new_node(char value, int frequency, int flag, tree left, tree right) {
-  tree node = malloc(sizeof(struct node));
+  tree node = (tree) malloc(sizeof(struct node));
   node->value = value;
   node->left = left;
   node->right = right;
@@ -26,7 +26,7 @@ tree new_node(char value, int frequency, int flag, tree left, tree right) {
 }
 
 tree node_from_entry(s_entry entry) {
-  tree node = malloc(sizeof(struct node));
+  tree node = (tree) malloc(sizeof(struct node));
   node->value = entry->key;
   node->left = NULL;
   node->right = NULL;
@@ -34,15 +34,6 @@ tree node_from_entry(s_entry entry) {
   node->frequency = entry->frequency;
 
   return node;
-}
-
-/*
- * Huffman export to table
- */
-s_table convert_to_tbl(tree root) {
-  s_table table = init_table(0, 0, NULL); 
-  
-  return table;
 }
 
 /*
@@ -94,7 +85,7 @@ tree convert_from_tbl(s_table table) {
 
 void explore_tree_encoding(s_table table, tree node, int encoding, int depth) {
   if (node->flag == -1) {
-    char * encoding_str = malloc(sizeof(char)*(depth+1));
+    char * encoding_str = (char *) malloc(sizeof(char)*(depth+1));
     for (int i = 0; i < depth; i++) {
       encoding_str[(depth-1)-i] = '0' + ((encoding>>i)&1);
     }
@@ -116,7 +107,7 @@ void explore_tree_encoding(s_table table, tree node, int encoding, int depth) {
  */
 void fill_encoding(tree root, s_table table) {
   if (root->flag == -1) {
-    char * encoding_str = malloc(sizeof(char)*1);
+    char * encoding_str = (char *) malloc(sizeof(char)*1);
     encoding_str[0] = '0';
 
     set_encoding(table, root->value, encoding_str);
@@ -136,7 +127,7 @@ void fill_encoding(tree root, s_table table) {
  */
 void explore_tree(tree node, int encoding, int depth, FILE * fp) {
   if (node->flag == -1) {
-    char * encoding_str = malloc(sizeof(char)*(depth+3));
+    char * encoding_str = (char *) (sizeof(char)*(depth+3));
     for (int i = 0; i < depth; i++) {
       encoding_str[depth+1-i] = '0' + ((encoding>>i)&1);
     }
@@ -155,7 +146,7 @@ void explore_tree(tree node, int encoding, int depth, FILE * fp) {
   }
 }
 
-void export_tree(tree root, char * filename) {
+void export_tree(tree root, char filename[]) {
   FILE * file = fopen(filename, "w");
   if (root->flag == -1) {
     fprintf(file, "%c:%f" , root->value, root->frequency);
@@ -183,8 +174,4 @@ void write_tree(tree root, FILE * output) {
       explore_tree(root->right, 1, 1, output);
     }
   }
-}
-
-tree read_tree(FILE * input, int * padding) {
-  return NULL;
 }

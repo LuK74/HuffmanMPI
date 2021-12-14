@@ -86,7 +86,7 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
 int decompress(FILE * input, FILE * output) {
   rewind(input);
 
-  int * padding = malloc(sizeof(int));
+  int * padding = (int *) malloc(sizeof(int));
   s_table table = read_table(input, padding);
   tree root = convert_from_tbl(table);
 
@@ -143,8 +143,9 @@ int test(char * input) {
   FILE * output = fopen("test_compressed_output.txt", "w");
   compress(input_file, output, table, root);
   fclose(output);
-  
-  export_tree(root, "test_tree.txt");
+
+  char tree_filename[] = "test_tree.txt";
+  export_tree(root, tree_filename);
 
   FILE * new_output = fopen("test_decompressed_output.txt", "w");
   FILE * new_input = fopen("test_compressed_output.txt", "r");
@@ -168,7 +169,9 @@ int main(int argc, char * argv[]) {
 
     compress(input, output, table, root);
   
-    export_tree(root, "tree.txt");
+
+    char tree_filename[] = "tree.txt";
+    export_tree(root, tree_filename);
     fclose(input);
     fclose(output);
   }
