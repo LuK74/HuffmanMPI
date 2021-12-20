@@ -16,6 +16,4 @@ test3:
 	diff test3.txt test3_d.txt
 
 clean:
-	rm -f test1/*_c.txt test1/*_d.txt	
-	rm -f test2/*_c.txt test2/*_d.txt
-	rm -f test3/*_c.txt test3/*_d.txt
+	rm -f test*_c.txt test*_d.txt	

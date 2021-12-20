@@ -1,18 +1,29 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <mpi.h>
 #include "tree.h"
 
+int mpi_rank, mpi_size;
 
-s_table generate_table(FILE * file) {
+s_table generate_table(char * filename) {
+  MPI_File fh;
+  MPI_Status status;
+  MPI_Offset file_size;
+  MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+  MPI_File_get_size(fh, &file_size);
+  
   s_table table = init_table(0,0,NULL);
   int total_occ = 0;
-  char c = fgetc(file);
+  char c;
   
-  while(c != EOF) {
+  char * buf = (char*) malloc(sizeof(char)*file_size);
+  
+  MPI_File_read_all(fh, buf, file_size, MPI_CHAR, &status);
+  for (int i = 0; i < file_size; i++) {
+    c = buf[i];
     total_occ++;
     increment_entry(table, c);
-    c = fgetc(file);
   }
 
   build_frequency(table, total_occ);
@@ -37,7 +48,7 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
     total_occ++;
     entry = get_entry(table, c);
     if (entry == NULL) return -1;
-    for (int i = 0; entry->encoding[i] != '\n'; i++) {
+    for (int i = 0; entry->encoding[i] != '\0'; i++) {
       if (curr_size != 0) to_print = to_print<<1;
       
       to_print = to_print | ((entry->encoding[i]) - '0');
@@ -136,7 +147,7 @@ int decompress(FILE * input, FILE * output) {
 
 int test(char * input) {
   FILE * input_file = fopen(input, "r");
-  s_table table = generate_table(input_file);
+  s_table table = generate_table(input);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
 
@@ -166,7 +177,7 @@ void print_help() {
 
 void process_compression(char * input, char * output) {
   FILE * input_file = fopen(input, "r");
-  s_table table = generate_table(input_file);
+  s_table table = generate_table(input);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
       
@@ -217,6 +228,10 @@ void process_args(int argc, char * argv[]) {
 }
 
 int main(int argc, char * argv[]) {
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   process_args(argc, argv);
+  MPI_Finalize();
   return 0;
 }

@@ -37,7 +37,7 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
     total_occ++;
     entry = get_entry(table, c);
     if (entry == NULL) return -1;
-    for (int i = 0; entry->encoding[i] != '\n'; i++) {
+    for (int i = 0; entry->encoding[i] != '\0'; i++) {
       if (curr_size != 0) to_print = to_print<<1;
       
       to_print = to_print | ((entry->encoding[i]) - '0');

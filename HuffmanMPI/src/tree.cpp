@@ -83,13 +83,13 @@ tree convert_from_tbl(s_table table) {
   return parent;  
 }
 
-void explore_tree_encoding(s_table table, tree node, int encoding, int depth) {
+void explore_tree_encoding(s_table table, tree node, long long int encoding, int depth) {
   if (node->flag == -1) {
     char * encoding_str = (char *) malloc(sizeof(char)*(depth+1));
     for (int i = 0; i < depth; i++) {
       encoding_str[(depth-1)-i] = '0' + ((encoding>>i)&1);
     }
-    encoding_str[depth] = '\n';
+    encoding_str[depth] = '\0';
     set_encoding(table, node->value, encoding_str);
     
   } else {

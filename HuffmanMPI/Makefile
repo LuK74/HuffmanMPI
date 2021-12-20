@@ -4,7 +4,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 MKDIR = mkdir
 
-CC = g++
+CC = mpic++
 
 all : directories huffman
 
