@@ -6,7 +6,7 @@
 
 int mpi_rank, mpi_size;
 
-s_table generate_table(char * filename) {
+s_table generate_table(char * filename, int * f_size) {
   MPI_File fh;
   MPI_Status status;
   MPI_Offset file_size;
@@ -27,11 +27,12 @@ s_table generate_table(char * filename) {
   }
 
   build_frequency(table, total_occ);
-
+  *f_size = total_occ;
+  
   return table;
 }
 
-int compress(FILE * input, FILE * output, s_table table, tree root) {
+int compress(FILE * input, FILE * output, s_table table, tree root, int f_size) {
   rewind(input);
   char c = fgetc(input);
 
@@ -39,8 +40,8 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
   char to_print = 0;
   s_entry entry = NULL;
 
-  int tube[2];
-  pipe(tube);
+  int buf_size = f_size;
+  char * buf = (char*) malloc(sizeof(char)*buf_size);
   int total_size = 0;
   int total_occ = 0;
   
@@ -55,11 +56,17 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
       curr_size++;
 
       if (curr_size == 8) {
-	write(tube[1], &to_print, 1);
+	buf[total_size] = to_print;
 	to_print = 0;
 	curr_size = 0;
 
 	total_size++;
+	if (total_size >= buf_size) {
+	  char * old_buf = buf;
+	  buf = (char *) malloc(sizeof(char)*(buf_size*2));
+	  for (int i = 0; i < buf_size; i++) { buf[i] = old_buf[i] ; }
+	  buf_size *= 2;
+	}
       } //else {
 	//to_print = to_print<<1;
       //}
@@ -72,45 +79,41 @@ int compress(FILE * input, FILE * output, s_table table, tree root) {
   if (curr_size != 0) {
     padding = 8-curr_size;
     to_print = to_print<<padding;
-    write(tube[1], &to_print, 1); 
+    buf[total_size] = to_print;
     total_size++;
   }
 
-  write_table(output, table, padding, total_occ);
+  write_table(output, table, padding, total_occ, total_size);
   
   //char * buffer = malloc(sizeof(char)*total_size);
   //read(tube[0], buffer, total_size);
 
-  char c_to_print;
-  
-  while(total_size > 0) {
-    read(tube[0], &c_to_print, 1);
-    fputc(c_to_print, output);
-    total_size--;
+  for (int i = 0; i < total_size; i++) {
+     fputc(buf[i], output);
   }
 
-  close(tube[0]);
-  close(tube[1]);
+  free(buf);
+  
   return 0;
 }
 
 int decompress(FILE * input, FILE * output) {
   rewind(input);
 
-  int * padding = (int *) malloc(sizeof(int));
-  s_table table = read_table(input, padding);
+  int padding;
+  int size;
+  s_table table = read_table(input, &padding, &size);
   tree root = convert_from_tbl(table);
 
   tree current_node = root;
     
   char c = fgetc(input);
-  char next = fgetc(input);
   int direction = 0;
   
-  while (c != EOF) {
+  while (size > 0) {
     int limit = 0;
-    if (next == EOF) {
-      limit = *padding;
+    if (size == 1) {
+      limit = padding;
     }
     
     for (int i = 7; i >= limit; i--) {
@@ -131,8 +134,8 @@ int decompress(FILE * input, FILE * output) {
       }
     }
 
-    c = next;
-    next = fgetc(input);
+    c = fgetc(input);
+    size--;
   }  
 
   if (current_node != NULL) {
@@ -147,12 +150,13 @@ int decompress(FILE * input, FILE * output) {
 
 int test(char * input) {
   FILE * input_file = fopen(input, "r");
-  s_table table = generate_table(input);
+  int f_size;
+  s_table table = generate_table(input, &f_size);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
 
   FILE * output = fopen("test_compressed_output.txt", "w");
-  compress(input_file, output, table, root);
+  compress(input_file, output, table, root, f_size);
   fclose(output);
 
   char tree_filename[] = "test_tree.txt";
@@ -177,12 +181,13 @@ void print_help() {
 
 void process_compression(char * input, char * output) {
   FILE * input_file = fopen(input, "r");
-  s_table table = generate_table(input);
+  int f_size;
+  s_table table = generate_table(input, &f_size);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
       
   FILE * output_file = fopen(output, "w");
-  compress(input_file, output_file, table, root);
+  compress(input_file, output_file, table, root, f_size);
   fclose(output_file);
   fclose(input_file); 
 }

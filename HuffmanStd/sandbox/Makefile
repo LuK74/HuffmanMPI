@@ -1,18 +1,20 @@
+SHELL := /bin/bash
+
 all: test1 test2 test3
 
 test1:
-	./../bin/huffman -c test1.txt test1_c.txt
-	./../bin/huffman -d test1_c.txt test1_d.txt
+	time ./../bin/huffman -c test1.txt test1_c.txt
+	time ./../bin/huffman -d test1_c.txt test1_d.txt
 	diff test1.txt test1_d.txt
 
 test2:
-	./../bin/huffman -c test2.txt test2_c.txt
-	./../bin/huffman -d test2_c.txt test2_d.txt
+	time ./../bin/huffman -c test2.txt test2_c.txt
+	time ./../bin/huffman -d test2_c.txt test2_d.txt
 	diff test2.txt test2_d.txt
 
 test3:
-	./../bin/huffman -c test3.txt test3_c.txt
-	./../bin/huffman -d test3_c.txt test3_d.txt
+	time ./../bin/huffman -c test3.txt test3_c.txt
+	time ./../bin/huffman -d test3_c.txt test3_d.txt
 	diff test3.txt test3_d.txt
 
 clean:

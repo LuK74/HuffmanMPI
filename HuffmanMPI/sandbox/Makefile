@@ -1,7 +1,9 @@
+SHELL := /bin/bash
+
 all: test1 test2 test3
 
 # Temporary fix the "--mca opal_warn_on_missing_libcuda 0"
-RUN = mpirun -n 4 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
+RUN = time mpirun -n 4 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
 
 test1:
 	$(RUN) -c test1.txt test1_c.txt

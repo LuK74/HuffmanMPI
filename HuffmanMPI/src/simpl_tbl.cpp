@@ -164,9 +164,10 @@ int set_encoding(s_table table, char key, char * encoding) {
   return -1;
 }
 
-void write_table(FILE * output, s_table table, int padding, int total_occ) {
+void write_table(FILE * output, s_table table, int padding, int total_occ, int total_size) {
   fprintf(output, "Padding=%d\n", padding);
   fprintf(output, "Size=%d\n", total_occ);
+  fprintf(output, "SizeToRead=%d\n", total_size);
 
   for (int i = 0; i < table->n_entries; i++) {
     fprintf(output, "Key=%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
@@ -179,14 +180,15 @@ void write_table(FILE * output, s_table table, int padding, int total_occ) {
 /*
  * Read table from huffman compressed file
  */
-s_table read_table(FILE * input, int * padding) {
+s_table read_table(FILE * input, int * padding, int * size) {
   s_table table = init_table(0,0, NULL);
 
   int total_occ = 0;
   
   fscanf(input, "Padding=%d\n", padding);
-  fscanf(input, "Size=%d\n", &total_occ); 
-  
+  fscanf(input, "Size=%d\n", &total_occ);
+  fscanf(input, "SizeToRead=%d\n", size);
+
   char * str = (char *) malloc(sizeof(char)*100);
   char key;
   int occurences = 0;
