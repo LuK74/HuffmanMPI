@@ -220,11 +220,12 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
        
     write_table(output, table, padding, total_occ, total_size);
 
-    for (int i = 0; i < total_size; i++) {
-      fputc(buf[i], output);
+    for (int i = 0; i < final_size; i++) {
+      fputc(final_buf[i], output);
     }
     
     free(buf);
+    free(final_buf);
     
   } else {
     MPI_Send(&total_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
