@@ -3,9 +3,14 @@ SHELL := /bin/bash
 all: test1 test2 test3
 
 # Temporary fix the "--mca opal_warn_on_missing_libcuda 0"
-RUN = time mpirun -n 6 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
+RUN = time mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
 
 DEBUG = mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 xterm -e gdb --args ./../bin/huffman
+
+VALGRIND =  mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 xterm -e valgrind ./../bin/huffman
+
+valgrind_c:
+	$(VALGRIND) -c test1.txt test1_c.txt
 
 debug_c:
 	$(DEBUG) -c test1.txt test1_c.txt
