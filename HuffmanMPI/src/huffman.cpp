@@ -170,37 +170,6 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
   if (mpi_rank + 1 == mpi_size) {
     char * final_buf = NULL;
     int final_size = 0;
-   
-    for (int i = 0; i < mpi_size - 1; i++) {
-      int buf_size = 0;
-      MPI_Recv(&buf_size, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-      final_size += buf_size;
-      
-      char * r_buf = (char *) malloc(sizeof(char)*buf_size);
-      MPI_Recv(r_buf, buf_size, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status); 
-      
-      char * old_buf = final_buf;
-      final_buf = (char *) malloc(sizeof(char)*final_size);
-      for (int i = 0; i < final_size - buf_size; i++) { final_buf[i] = old_buf[i]; }
-      if (old_buf != NULL) free(old_buf);
-
-      for (int i = final_size - buf_size; i < final_size; i++) {
-	final_buf[i] = r_buf[i - (final_size - buf_size)];
-      }
-    }
-    
-    final_size += total_size;
-    char * old_buf = final_buf;
-    final_buf = (char *) malloc(sizeof(char)*final_size);
-    for (int i = 0; i < final_size - total_size; i++) { final_buf[i] = old_buf[i]; }
-    if (old_buf != NULL) free(old_buf);
-
-    for (int i = final_size - total_size; i < final_size; i++) {
-      final_buf[i] = buf[i - (final_size - total_size)];
-    }
-
-    int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
-    write_table(output, table, padding, file_size, (final_size/8)+(final_size%8 != 0 ? 1 : 0));
 
     char to_print = 0;
     int curr_size = 0;
@@ -222,12 +191,58 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
       }
       fputc(to_print, output);
     }
+
+    int * buf_sizes = (int*) malloc(sizeof(int)*(mpi_size-1));
+    for (int i = 0; i < mpi_size - 1; i++) {
+      MPI_Recv(buf_sizes+i, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+      final_size += buf_sizes[i];
+    }
+
+    final_size += total_size;	
+    int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
+    write_table(output, table, padding, file_size, (final_size/8)+(final_size%8 != 0 ? 1 : 0));
+
     
-    free(buf);
-    free(final_buf);
+    for (int i = 0; i < mpi_size; i++) {
+      int buf_size = 0;
+      char * r_buf = NULL;
+      if (i != mpi_size - 1) {
+	buf_size = buf_sizes[i];
+	final_size += buf_size;
+      
+	r_buf = (char *) malloc(sizeof(char)*buf_size);
+	MPI_Recv(r_buf, buf_size, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status); 
+      } else {
+	r_buf = buf;
+	buf_size = total_size;
+      }
+      
+      for (int i = 0; i < buf_size; i++) {
+	if (curr_size != 0) { to_print = to_print<<1; }
+	to_print = to_print | (r_buf[i] - '0');
+	curr_size++;
+	
+	if (curr_size == 8) {
+	  fputc(to_print, output);
+	  curr_size = 0;
+	  to_print = 0;
+	}
+      }
+      if (r_buf != NULL) free(r_buf);
+    }
+
+    if (curr_size != 0) {
+      if (curr_size != 8) {
+	to_print = to_print << (8-curr_size);
+      }
+      fputc(to_print, output);
+    }
+    
+
   } else {
     MPI_Send(&total_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
     MPI_Send(buf, total_size, MPI_CHAR, mpi_size - 1, 0, MPI_COMM_WORLD);
+    free(buf);
   } 
   //char * buffer = malloc(sizeof(char)*total_size);
   //read(tube[0], buffer, total_size);

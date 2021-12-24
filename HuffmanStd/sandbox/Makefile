@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-all: test1 test2 test3
+all: test1 test2 test3 test4
 
 test1:
 	time ./../bin/huffman -c test1.txt test1_c.txt
@@ -16,6 +16,12 @@ test3:
 	time ./../bin/huffman -c test3.txt test3_c.txt
 	time ./../bin/huffman -d test3_c.txt test3_d.txt
 	diff test3.txt test3_d.txt
+
+test4:
+	time ./../bin/huffman -c test4.txt test4_c.txt
+	time ./../bin/huffman -d test4_c.txt test4_d.txt
+	diff test4.txt test4_d.txt
+
 
 clean:
 	rm -f test*_c.txt test*_d.txt	
