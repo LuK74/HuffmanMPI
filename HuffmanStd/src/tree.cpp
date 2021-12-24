@@ -127,7 +127,7 @@ void fill_encoding(tree root, s_table table) {
  */
 void explore_tree(tree node, int encoding, int depth, FILE * fp) {
   if (node->flag == -1) {
-    char * encoding_str = (char *) (sizeof(char)*(depth+3));
+    char * encoding_str = (char *) malloc((sizeof(char)*(depth+3)));
     for (int i = 0; i < depth; i++) {
       encoding_str[depth+1-i] = '0' + ((encoding>>i)&1);
     }

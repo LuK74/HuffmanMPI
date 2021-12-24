@@ -174,7 +174,10 @@ void process_compression(char * input, char * output) {
   s_table table = generate_table(input_file, &f_size);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
-      
+
+  char tree_filename[] = "test_tree.txt";
+  export_tree(root, tree_filename);
+  
   FILE * output_file = fopen(output, "w");
   compress(input_file, output_file, table, root, f_size);
   fclose(output_file);

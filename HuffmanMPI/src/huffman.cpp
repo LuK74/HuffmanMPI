@@ -131,7 +131,7 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
   }
   
   char * input_buf = (char*) malloc(sizeof(char)*to_read);
-  MPI_File_read_at(fh, mpi_rank*to_read ,input_buf, to_read, MPI_CHAR, &status);
+  MPI_File_read_at(fh, mpi_rank*(file_size/mpi_size) ,input_buf, to_read, MPI_CHAR, &status);
   
   s_entry entry = NULL;
 
@@ -144,7 +144,7 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
   int index = 1;
   char c = input_buf[0];
   
-  while(index < to_read) {
+  while(index <= to_read) {
     total_occ++;
     entry = get_entry(table, c);
     if (entry == NULL) return -1;
@@ -164,7 +164,9 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
       c = input_buf[index];
       index++;
   }
-  
+
+  // modify this part in order to write when we receive the data
+  // should be quite simple and a good gain of time
   if (mpi_rank + 1 == mpi_size) {
     char * final_buf = NULL;
     int final_size = 0;
@@ -197,8 +199,8 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
       final_buf[i] = buf[i - (final_size - total_size)];
     }
 
-    int padding = 8 - final_size%8;
-    write_table(output, table, padding, total_occ, (final_size+1)/8);
+    int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
+    write_table(output, table, padding, file_size, (final_size/8)+(final_size%8 != 0 ? 1 : 0));
 
     char to_print = 0;
     int curr_size = 0;
@@ -215,6 +217,9 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
     }
 
     if (curr_size != 0) {
+      if (curr_size != 8) {
+	to_print = to_print << (8-curr_size);
+      }
       fputc(to_print, output);
     }
     
