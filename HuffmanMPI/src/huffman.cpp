@@ -126,12 +126,13 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
   MPI_File_get_size(fh, &file_size);
   
   int to_read = file_size/mpi_size;
-  if (mpi_rank + 1 == mpi_size) {
+  if (mpi_rank == 0) {
     to_read += (file_size%mpi_size);
   }
   
   char * input_buf = (char*) malloc(sizeof(char)*to_read);
-  MPI_File_read_at(fh, mpi_rank*(file_size/mpi_size) ,input_buf, to_read, MPI_CHAR, &status);
+  MPI_File_read_at(fh, (mpi_rank != 0 ? to_read+(file_size%mpi_size) + (mpi_rank-1)*(file_size/mpi_size) : 0),
+		   input_buf, to_read, MPI_CHAR, &status);
   
   s_entry entry = NULL;
 
@@ -167,15 +168,19 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
 
   // modify this part in order to write when we receive the data
   // should be quite simple and a good gain of time
-  if (mpi_rank + 1 == mpi_size) {
-    char * final_buf = NULL;
-    int final_size = 0;
-
+  if (mpi_rank == 0) {
     char to_print = 0;
     int curr_size = 0;
-    for (int i = 0; i < final_size; i++) {
+
+    
+    int final_size = total_size;
+    final_size += total_size;	
+    int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
+    write_table(output, table, padding, file_size, (final_size/8)+(final_size%8 != 0 ? 1 : 0));
+
+    for (int i = 0; i < total_size; i++) {
       if (curr_size != 0) { to_print = to_print<<1; }
-      to_print = to_print | (final_buf[i] - '0');
+      to_print = to_print | (buf[i] - '0');
       curr_size++;
 
       if (curr_size == 8) {
@@ -185,38 +190,22 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
       }
     }
 
-    if (curr_size != 0) {
-      if (curr_size != 8) {
-	to_print = to_print << (8-curr_size);
-      }
-      fputc(to_print, output);
-    }
-
     int * buf_sizes = (int*) malloc(sizeof(int)*(mpi_size-1));
-    for (int i = 0; i < mpi_size - 1; i++) {
+    for (int i = 1; i < mpi_size; i++) {
       MPI_Recv(buf_sizes+i, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+      printf("buf %d\n", buf_sizes[i]);
       final_size += buf_sizes[i];
     }
-
-    final_size += total_size;	
-    int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
-    write_table(output, table, padding, file_size, (final_size/8)+(final_size%8 != 0 ? 1 : 0));
-
     
-    for (int i = 0; i < mpi_size; i++) {
+    for (int i = 1; i < mpi_size; i++) {
       int buf_size = 0;
       char * r_buf = NULL;
-      if (i != mpi_size - 1) {
-	buf_size = buf_sizes[i];
-	final_size += buf_size;
+      buf_size = buf_sizes[i];
+      final_size += buf_size;
       
-	r_buf = (char *) malloc(sizeof(char)*buf_size);
-	MPI_Recv(r_buf, buf_size, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status); 
-      } else {
-	r_buf = buf;
-	buf_size = total_size;
-      }
-      
+      r_buf = (char *) malloc(sizeof(char)*buf_size);
+      MPI_Recv(r_buf, buf_size, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status); 
+     
       for (int i = 0; i < buf_size; i++) {
 	if (curr_size != 0) { to_print = to_print<<1; }
 	to_print = to_print | (r_buf[i] - '0');
@@ -238,10 +227,11 @@ int compress_mpi(char * input, FILE * output, s_table table, tree root, int f_si
       fputc(to_print, output);
     }
     
+    //MPI_Finalize();
 
   } else {
-    MPI_Send(&total_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
-    MPI_Send(buf, total_size, MPI_CHAR, mpi_size - 1, 0, MPI_COMM_WORLD);
+    MPI_Send(&total_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    MPI_Send(buf, total_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
     free(buf);
   } 
   //char * buffer = malloc(sizeof(char)*total_size);
