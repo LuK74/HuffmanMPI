@@ -124,11 +124,10 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
   allstarttime = MPI_Wtime();
   
   MPI_File fh_input;
-  MPI_File fh_output;
   MPI_Status status;
   MPI_Offset file_size;
   MPI_File_open(MPI_COMM_WORLD, input, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh_input);
-  MPI_File_open(MPI_COMM_WORLD, output, MPI_MODE_RDWR, MPI_INFO_NULL, &fh_output);
+  //MPI_File_open(MPI_COMM_WORLD, output, MPI_MODE_RDWR, MPI_INFO_NULL, &fh_output);
   MPI_File_get_size(fh_input, &file_size);
   
   int to_read = file_size/mpi_size;
@@ -199,53 +198,37 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
     char to_print = 0;
     int curr_size = 0;
 
+    MPI_Send(&curr_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     if (mpi_size != 1) {
-      MPI_Send(&curr_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-      MPI_Send(&to_print, 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+      MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
+      MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
     }
-
-    MPI_File_seek(fh_output, 0, MPI_SEEK_END);
-    for (int i = 0; i < mpi_size; i++) {
-      if (i != mpi_size - 1) {
-	MPI_Recv(&curr_size, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-	MPI_Recv(&to_print, 1, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
+    
+    f_output = fopen(output, "a");
+    fseek(f_output, 0, SEEK_END);	
+    for (int i = 0; i < total_size; i++) {
+      if (curr_size != 0) { to_print = to_print<<1; }
+      to_print = to_print | (buf[i] - '0');
+      curr_size++;
 	
-	if (i != mpi_size - 2) {
-	  MPI_Send(&curr_size, 1, MPI_INT, i+1, 0, MPI_COMM_WORLD);
-	  MPI_Send(&to_print, 1, MPI_CHAR, i+1, 0, MPI_COMM_WORLD);
-	}
-      } else {      
-	printf("Total size %d\n", total_size);
-	MPI_File_seek(fh_output, 0, MPI_SEEK_END);
-	for (int i = 0; i < total_size; i++) {
-	  if (curr_size != 0) { to_print = to_print<<1; }
-	  to_print = to_print | (buf[i] - '0');
-	  curr_size++;
-	
-	  if (curr_size == 8) {
-	    MPI_File_write(fh_output, &to_print, 1, MPI_BYTE, &status);
-	    printf("Status : %ld\n", status._ucount);
-	    curr_size = 0;
-	    to_print = 0;
-	  }
-	}
-	if (buf != NULL) free(buf);
-      }
-
-      if (curr_size != 0) {
-	if (curr_size != 8) {
-	  to_print = to_print << (8-curr_size);
-	}
-	MPI_File_write(fh_output, &to_print, 1, MPI_BYTE, &status);
+      if (curr_size == 8) {
+	fputc(to_print, f_output);
+	curr_size = 0;
+	to_print = 0;
       }
     }
-
-    int close_signal = 1;
-    for (int i = 0; i < mpi_size - 1; i++) {
-      MPI_Send(&close_signal, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+	
+    if (curr_size != 0) {
+      if (curr_size != 8) {
+	to_print = to_print << (8-curr_size);
+      }
+      fputc(to_print, f_output);
     }
-    MPI_File_close(&fh_output);
+	
+    if (buf != NULL) free(buf);
+    fclose(f_output);
     MPI_File_close(&fh_input);
+  
   } else {
     int curr_size = 0;
     char to_print = 0;
@@ -253,30 +236,32 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
     MPI_Send(&total_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
 
     //MPI_File_seek(fh_output, 0, MPI_SEEK_END);
-    MPI_Recv(&curr_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD, &status);
-    MPI_Recv(&to_print, 1, MPI_CHAR, mpi_size - 1, 0, MPI_COMM_WORLD, &status);
-
-    MPI_File_seek(fh_output, 0, MPI_SEEK_END);
+    if (mpi_rank != 0) {
+      MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
+      MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
+    } else {
+      MPI_Recv(&curr_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD, &status);
+    }
+    
+    FILE * f_output = fopen(output, "a");
+    fseek(f_output, 0, SEEK_END);	
     for (int i = 0; i < total_size; i++) {
       if (curr_size != 0) { to_print = to_print<<1; }
       to_print = to_print | (buf[i] - '0');
       curr_size++;
 	
       if (curr_size == 8) {
-	MPI_File_write(fh_output, &to_print, 1, MPI_BYTE, &status);
-	printf("Status : %ld\n", status._ucount);
+	fputc(to_print, f_output);
 	curr_size = 0;
 	to_print = 0;
       }
     }
+    fclose(f_output);
     if (buf != NULL) free(buf);
     
-    MPI_Send(&curr_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
-    MPI_Send(&to_print, 1, MPI_CHAR, mpi_size - 1, 0, MPI_COMM_WORLD);
+    MPI_Send(&curr_size, 1, MPI_INT, mpi_rank + 1, 0, MPI_COMM_WORLD);
+    MPI_Send(&to_print, 1, MPI_CHAR, mpi_rank + 1, 0, MPI_COMM_WORLD);
 
-    int close_signal = 0;
-    MPI_Recv(&close_signal, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD, &status);
-    MPI_File_close(&fh_output);
     MPI_File_close(&fh_input);
   } 
   //char * buffer = malloc(sizeof(char)*total_size);
