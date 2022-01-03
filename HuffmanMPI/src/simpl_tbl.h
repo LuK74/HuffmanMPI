@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <mpi.h>
 
 struct simpl_entry {
   char key;
@@ -44,3 +45,4 @@ int set_encoding(s_table table, char key, char * encoding);
  */
 s_table read_table(FILE * input, int * padding, int * size);
 void write_table(FILE * output, s_table table, int padding, int total_occ, int total_size);
+void write_table_mpi(MPI_File * output, s_table table, int padding, int total_occ, int total_size);

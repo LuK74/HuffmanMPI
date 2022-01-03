@@ -176,6 +176,23 @@ void write_table(FILE * output, s_table table, int padding, int total_occ, int t
   fprintf(output, "END\n");
 }
 
+/*
+void write_table_mpi(MPI_File * output, s_table table, int padding, int total_occ, int total_size) {
+  //MPI_Status
+
+  fprintf(output, "Padding=%d\n", padding);
+  fprintf(output, "Size=%d\n", total_occ);
+  fprintf(output, "SizeToRead=%d\n", total_size);
+
+  for (int i = 0; i < table->n_entries; i++) {
+    fprintf(output, "Key=%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
+  }
+
+  fprintf(output, "END\n");
+}
+*/
+
+
 
 /*
  * Read table from huffman compressed file
