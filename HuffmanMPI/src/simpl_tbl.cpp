@@ -178,20 +178,21 @@ void write_table(FILE * output, s_table table, int padding, int total_occ, int t
 
 /*
 void write_table_mpi(MPI_File * output, s_table table, int padding, int total_occ, int total_size) {
-  //MPI_Status
+  MPI_Status status;
+  char * buf = (char*) malloc(sizeof(char)*(table->n_entries*7)+34);
 
-  fprintf(output, "Padding=%d\n", padding);
-  fprintf(output, "Size=%d\n", total_occ);
-  fprintf(output, "SizeToRead=%d\n", total_size);
+  fprintf(output, "Padding=%d\n", padding); // 10
+  fprintf(output, "Size=%d\n", total_occ); // 7
+  fprintf(output, "SizeToRead=%d\n", total_size); // 13
 
   for (int i = 0; i < table->n_entries; i++) {
     fprintf(output, "Key=%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
   }
 
-  fprintf(output, "END\n");
+  fprintf(output, "END\n"); // 4
+  MPI_File_write(*output, buf, (table->n_entries*7)+34, MPI_CHAR, &status);
 }
 */
-
 
 
 /*
