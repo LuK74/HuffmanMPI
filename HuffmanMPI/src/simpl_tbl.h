@@ -37,6 +37,7 @@ int get_entry_index(s_table table, char key);
  * More specific functions
  */
 int increment_entry(s_table table, char key);
+int increment_n_entry(s_table table, char key, int n);
 void build_frequency(s_table table, int total_occurences);
 int set_encoding(s_table table, char key, char * encoding);
 

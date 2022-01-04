@@ -1,11 +1,11 @@
 SHELL := /bin/bash
 
-all: test1 test2 test3 test4
+all: test1 test2 test3 test4 test5
 
 # Temporary fix the "--mca opal_warn_on_missing_libcuda 0"
-RUN = time mpirun -n 4 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
+RUN = time mpirun -n 6 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
 
-DEBUG = mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 xterm -e gdb --args ./../bin/huffman
+DEBUG = mpirun -n 4 --mca opal_warn_on_missing_libcuda 0 xterm -e gdb --args ./../bin/huffman
 
 VALGRIND =  mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 xterm -e valgrind ./../bin/huffman
 
@@ -39,6 +39,8 @@ test4:
 	$(RUN) -d test4_c.txt test4_d.txt
 	diff test4.txt test4_d.txt
 
+test5:
+	$(RUN) -c test5.txt test5_c.txt
 
 tree:
 	$(RUN) -t test3.txt

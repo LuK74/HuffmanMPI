@@ -138,6 +138,40 @@ int increment_entry(s_table table, char key) {
   return 0;
 }
 
+
+/*
+ * Increment the value of an entry IF it does exist
+ * Return 0 if the entry exist and it has been incremented
+ * Return -1 if the entry doesn't exist 
+ */
+int increment_n_entry(s_table table, char key, int n) {
+  int index = get_entry_index(table, key);
+  s_entry entry = NULL;
+  
+  if (index == -1) {
+    entry = create_entry(key, 0, 0);
+    add_entry(table, entry);
+    index = get_entry_index(table, key);
+  } else {
+    entry = table->entries[index];
+  } 
+
+  entry->occurences = entry->occurences + n;
+
+  for (int i = index; i > 0; i--) {
+    if ((table->entries[i])->occurences > (table->entries[i-1])->occurences) {
+      s_entry swap_entry = table->entries[i];
+      table->entries[i] = table->entries[i-1];
+      table->entries[i-1] = swap_entry;
+    } else {
+      break;
+    }
+  }
+  
+  
+  return 0;
+}
+
 /*
  * Given a total number of occurences, will build the frequency
  * value in each entry
