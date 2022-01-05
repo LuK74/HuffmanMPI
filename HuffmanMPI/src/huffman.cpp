@@ -35,7 +35,7 @@ s_table generate_table(char * filename, int * f_size) {
      c = buf[index++];
   }
 
-  /* int n_entries = 0;
+  int n_entries = 0;
   char key;
   int n_occurences = 0;
   for (int i = 0; i < mpi_size; i++) {
@@ -51,11 +51,12 @@ s_table generate_table(char * filename, int * f_size) {
       for (int j = 0; j < n_entries; j++) {
 	MPI_Bcast(&key, 1, MPI_CHAR, i, MPI_COMM_WORLD);
 	MPI_Bcast(&n_occurences, 1, MPI_INT, i, MPI_COMM_WORLD);
-	increment_n_entry(final_table, key, n_occurences);                                 
+	increment_n_entry(final_table, key, n_occurences);
+	total_occ += n_occurences;
       }
     }
 
-  }*/
+  }
   
   /*if (mpi_rank == 0) {  
     int n_entries = 0;
