@@ -35,7 +35,7 @@ s_table generate_table(char * filename, int * f_size) {
      c = buf[index++];
   }
 
-  int n_entries = 0;
+  /* int n_entries = 0;
   char key;
   int n_occurences = 0;
   for (int i = 0; i < mpi_size; i++) {
@@ -55,10 +55,9 @@ s_table generate_table(char * filename, int * f_size) {
       }
     }
 
-  }
-
-  /*
-  if (mpi_rank == 0) {  
+  }*/
+  
+  /*if (mpi_rank == 0) {  
     int n_entries = 0;
     for (int i = 1; i < mpi_size; i++) {                                                  
       MPI_Recv(&n_entries, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);                      
@@ -67,13 +66,19 @@ s_table generate_table(char * filename, int * f_size) {
       for (int j = 0; j < n_entries; j++) {
 	MPI_Recv(&val_entry, 1, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
 	MPI_Recv(&n_occurences, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-         increment_n_entry(table, val_entry, n_occurences);                                  
-      }                                                                                          }
+	increment_n_entry(final_table, val_entry, n_occurences);
+	total_occ += n_occurences;
+      }
+    }
 
-    MPI_Bcast(&(table->n_entries), 1, MPI_INT, 0, MPI_COMM_WORLD);
     for (int i = 0; i < table->n_entries; i++) {
-      MPI_Bcast(&(table->entries[i]->key), 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-      MPI_Bcast(&(table->entries[i]->occurences), 1, MPI_INT, 0, MPI_COMM_WORLD);
+      increment_n_entry(final_table, (table->entries[i]->key), (table->entries[i]->occurences));
+    }
+    
+    MPI_Bcast(&(final_table->n_entries), 1, MPI_INT, 0, MPI_COMM_WORLD);
+    for (int i = 0; i < final_table->n_entries; i++) {
+      MPI_Bcast(&(final_table->entries[i]->key), 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&(final_table->entries[i]->occurences), 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     
   } else {
@@ -90,9 +95,10 @@ s_table generate_table(char * filename, int * f_size) {
     for (int j = 0; j < n_entries; j++) {
       MPI_Bcast(&val_entry, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
       MPI_Bcast(&n_occurences, 1, MPI_INT, 0, MPI_COMM_WORLD);
-      increment_n_entry(table, val_entry, n_occurences);                                  
+      increment_n_entry(final_table, val_entry, n_occurences);
+      total_occ += n_occurences;
     }                                                                                    
-  }*/
+    }*/
 
   build_frequency(final_table, total_occ);
   *f_size = total_occ;
@@ -225,15 +231,20 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
   // should be quite simple and a good gain of time
 
   if (mpi_rank + 1 == mpi_size) {
+    double starttime, endtime;
     
-    int final_size = 0;
-    
+    starttime = MPI_Wtime();
+     
+    int final_size = 0; 
     int * buf_sizes = (int*) malloc(sizeof(int)*(mpi_size-1));
     for (int i = 0; i < mpi_size - 1; i++) {
       MPI_Recv(buf_sizes+i, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
       final_size += buf_sizes[i];
     }
-
+    endtime = MPI_Wtime();
+    printf("Waiting for everyone took %f seconds\n", endtime-starttime);
+    
+    
     final_size += total_size;	
     int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
 
@@ -249,7 +260,10 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
       MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
       MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
     }
+
     
+    starttime = MPI_Wtime();
+     
     f_output = fopen(output, "a");
     fseek(f_output, 0, SEEK_END);	
     for (int i = 0; i < total_size; i++) {
@@ -270,7 +284,10 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
       }
       fputc(to_print, f_output);
     }
-	
+
+    endtime = MPI_Wtime();
+    printf("Writting in the file took %f seconds\n", endtime-starttime);
+    
     if (buf != NULL) free(buf);
     fclose(f_output);
     MPI_File_close(&fh_input);
