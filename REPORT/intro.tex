@@ -1,0 +1,49 @@
+\section{Introduction}
+This report is written for the Advanced Parallel Systems project related to the use of MPI (Message Passing Interface).\\
+I chose to do my project on the Huffman Algorithm because I find this algorithm pretty interesting, it allows me to have visible results and I thought that it was possible to improve it with MPI parallelization.\\
+\\
+Huffman compression algorithm is designed to generate a new encoding for each characters of a file given in input.\\
+With this new encoding will rewrite the file, switching each character by its new encoding, it should and will in most of the cases, reduce the total size of the initial file.\\
+Let's do an example.\\
+\\
+We'll assume that our initial file contains this :
+\begin{verbatim}
+Hello World!
+Hello France!
+Hello Grenoble!
+\end{verbatim}
+The main idea of the Huffman Algorithm is to compute the total occureces of each character in the file in order to give them a new encoding which size is related to the total number of occurences.\\
+For exemple in our case, we see that the character "G" is appearing only one time, contrary to the character "l" which is appaearing eight times. So, the new encoding for the character "G" will be longer than "l" encoding.\\
+We'll discuss more in detail how those new encoding are generated in the next section.\\
+\\
+So, what's the aim of my project ? I'll first implement the Huffman Algorithm using basic C++ in order to be able to compare its performances with the new version I'll implement, the parallelize one (using MPI).\\
+\\
+Now, let's see what an Huffman execution usually produce.\\
+After studying the frequency of each character, the encoding is generated.\\
+Here is the encoding generated for our example with my version of Huffman algorithm :
+\begin{verbatim}
+b:00000000
+G:00000001
+c:00000010
+a:00000011
+F:0000010
+d:0000011
+W:000010
+n:000011
+
+:00010
+!:00011
+r:0010
+ :0011
+H:010
+o:011
+e:10
+l:11
+\end{verbatim}
+Like I said earlier, the "l" does have one of the smallest new encoding and the "G" have one of the longest one.\\
+What about the output ? It wouldn't be useful to write the weird characters produced, but let's talk about the size.\\
+\\
+The initial file has a size of 43 bytes, and the compressed file has a size of 186 bytes. So what's the matter here ?\\
+In this case it is because of the metadata. In order for our Huffman algorithm to work we'll need to put some metadata in the compressed file, which in our case, have a size of 163 bytes.\\
+I decided to make the metadata pretty verbose, it allows use easier debugging but it could be reduced a lot, and it should be if the algorithm needs to be used in real case scenarios.\\
+So we can still conclude something, if we're only talking about of the interesting data of the compressed file (not the metadata), we can see that they have a size of 23 bytes, which is almost twice as less as the initial file.

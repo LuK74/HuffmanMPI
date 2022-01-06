@@ -1,0 +1,1 @@
+\section{Huffman algorithm, what is it ?}

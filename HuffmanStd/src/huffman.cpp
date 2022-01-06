@@ -150,13 +150,13 @@ int test(char * input) {
 
   char tree_filename[] = "test_tree.txt";
   export_tree(root, tree_filename);
-
+  
   FILE * new_output = fopen("test_decompressed_output.txt", "w");
   FILE * new_input = fopen("test_compressed_output.txt", "r");
   decompress(new_input, new_output);
   fclose(new_output);
   fclose(new_input);
-
+  
   return 0;
 }
 
