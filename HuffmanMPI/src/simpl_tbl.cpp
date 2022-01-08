@@ -13,6 +13,10 @@ s_table init_table(int n_entries, int init_tab_size, s_entry * entries) {
   return table;
 }
 
+/*
+ * Modify an existing entry
+ * Or add a new one if none entry exist with the key associated to new_entry
+ */
 void add_entry(s_table table, s_entry new_entry) {
   for (int i = 0; i < table->n_entries; i++) {
     if ((table->entries[i])->key == new_entry->key) {
@@ -43,6 +47,9 @@ void add_entry(s_table table, s_entry new_entry) {
 
 }
 
+/*
+ * Remove an entry from the table
+ */
 void remove_entry(s_table table, char key) {
   int found = 0;
   
@@ -74,6 +81,9 @@ void remove_entry(s_table table, char key) {
   
 }
 
+/*
+ * Return the entry associated to the key
+ */
 s_entry get_entry(s_table table, char key) {
   for (int i = 0; i < table->n_entries; i++) {
     if (((table->entries)[i])->key == key) {
@@ -83,6 +93,9 @@ s_entry get_entry(s_table table, char key) {
   return NULL;
 }
 
+/*
+ * Return the index of the entry associated to the key
+ */
 int get_entry_index(s_table table, char key) {
   for (int i = 0; i < table->n_entries; i++) {
     if (((table->entries)[i])->key == key) {
@@ -137,7 +150,6 @@ int increment_entry(s_table table, char key) {
   
   return 0;
 }
-
 
 /*
  * Increment the value of an entry IF it does exist
@@ -211,25 +223,6 @@ void write_table(FILE * output, s_table table, int padding, int total_occ, int t
 }
 
 /*
-void write_table_mpi(MPI_File * output, s_table table, int padding, int total_occ, int total_size) {
-  MPI_Status status;
-  char * buf = (char*) malloc(sizeof(char)*(table->n_entries*7)+34);
-
-  fprintf(output, "Padding=%d\n", padding); // 10
-  fprintf(output, "Size=%d\n", total_occ); // 7
-  fprintf(output, "SizeToRead=%d\n", total_size); // 13
-
-  for (int i = 0; i < table->n_entries; i++) {
-    fprintf(output, "Key=%c:%d\n", table->entries[i]->key, table->entries[i]->occurences); 
-  }
-
-  fprintf(output, "END\n"); // 4
-  MPI_File_write(*output, buf, (table->n_entries*7)+34, MPI_CHAR, &status);
-}
-*/
-
-
-/*
  * Read table from huffman compressed file
  */
 s_table read_table(FILE * input, int * padding, int * size) {
@@ -247,10 +240,6 @@ s_table read_table(FILE * input, int * padding, int * size) {
   int _read = fscanf(input, "Key=%c:%d\n", &key, &occurences);
 
   while(strcmp(str, "END") != 0) {
-    //char key = str[0];
-    //int occurences;
-    //sscanf(str, "Key=%c:%d\n", &key ,&occurences);
-
     s_entry entry = create_entry(key, occurences,(float)((float)(occurences)/(float)(total_occ)));
     add_entry(table, entry);
 

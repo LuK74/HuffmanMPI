@@ -6,6 +6,11 @@
 
 int mpi_rank, mpi_size;
 
+/*
+ * Generate an hashtable containing all the characters in the file "filename"
+ * Will also compute the informations associated to it (occurences and frequency)
+ * Return the table
+ */
 s_table generate_table(char * filename, int * f_size) {
   s_table table = init_table(0,0,NULL);
   s_table final_table = init_table(0,0,NULL);
@@ -56,50 +61,7 @@ s_table generate_table(char * filename, int * f_size) {
       }
     }
 
-  }
-  
-  /*if (mpi_rank == 0) {  
-    int n_entries = 0;
-    for (int i = 1; i < mpi_size; i++) {                                                  
-      MPI_Recv(&n_entries, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);                      
-      char val_entry;                                                                      
-      int n_occurences = 0;                                                                
-      for (int j = 0; j < n_entries; j++) {
-	MPI_Recv(&val_entry, 1, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
-	MPI_Recv(&n_occurences, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-	increment_n_entry(final_table, val_entry, n_occurences);
-	total_occ += n_occurences;
-      }
-    }
-
-    for (int i = 0; i < table->n_entries; i++) {
-      increment_n_entry(final_table, (table->entries[i]->key), (table->entries[i]->occurences));
-    }
-    
-    MPI_Bcast(&(final_table->n_entries), 1, MPI_INT, 0, MPI_COMM_WORLD);
-    for (int i = 0; i < final_table->n_entries; i++) {
-      MPI_Bcast(&(final_table->entries[i]->key), 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-      MPI_Bcast(&(final_table->entries[i]->occurences), 1, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-    
-  } else {
-    MPI_Send(&(table->n_entries), 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-    for (int i = 0; i < table->n_entries; i++) {
-      MPI_Send(&(table->entries[i]->key), 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-      MPI_Send(&(table->entries[i]->occurences), 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-    }
-
-    int n_entries = 0;
-    MPI_Bcast(&n_entries, 1, MPI_INT, 0, MPI_COMM_WORLD);                      
-    char val_entry;                                                                      
-    int n_occurences = 0;                                                                
-    for (int j = 0; j < n_entries; j++) {
-      MPI_Bcast(&val_entry, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-      MPI_Bcast(&n_occurences, 1, MPI_INT, 0, MPI_COMM_WORLD);
-      increment_n_entry(final_table, val_entry, n_occurences);
-      total_occ += n_occurences;
-    }                                                                                    
-    }*/
+  }  
 
   build_frequency(final_table, total_occ);
   *f_size = total_occ;
@@ -107,80 +69,16 @@ s_table generate_table(char * filename, int * f_size) {
   return final_table;
 }
 
-int compress(FILE * input, FILE * output, s_table table, tree root, int f_size) {
-  rewind(input);
-  char c = fgetc(input);
-
-  int curr_size = 0;
-  char to_print = 0;
-  s_entry entry = NULL;
-
-  int buf_size = f_size;
-  char * buf = (char*) malloc(sizeof(char)*buf_size);
-  int total_size = 0;
-  int total_occ = 0;
-  
-  while(c != EOF) {
-    total_occ++;
-    entry = get_entry(table, c);
-    if (entry == NULL) return -1;
-    for (int i = 0; entry->encoding[i] != '\0'; i++) {
-      if (curr_size != 0) to_print = to_print<<1;
-      
-      to_print = to_print | ((entry->encoding[i]) - '0');
-      curr_size++;
-
-      if (curr_size == 8) {
-	buf[total_size] = to_print;
-	to_print = 0;
-	curr_size = 0;
-
-	total_size++;
-	if (total_size >= buf_size) {
-	  char * old_buf = buf;
-	  buf = (char *) malloc(sizeof(char)*(buf_size*2));
-	  for (int i = 0; i < buf_size; i++) { buf[i] = old_buf[i] ; }
-	  buf_size *= 2;
-	}
-      } //else {
-	//to_print = to_print<<1;
-      //}
-      
-    }
-    c = fgetc(input);
-  }
-
-  int padding = 0;
-  if (curr_size != 0) {
-    padding = 8-curr_size;
-    to_print = to_print<<padding;
-    buf[total_size] = to_print;
-    total_size++;
-  }
-
-  write_table(output, table, padding, total_occ, total_size);
-  
-  //char * buffer = malloc(sizeof(char)*total_size);
-  //read(tube[0], buffer, total_size);
-
-  for (int i = 0; i < total_size; i++) {
-     fputc(buf[i], output);
-  }
-
-  free(buf);
-  
-  return 0;
-}
-
-int compress_mpi(char * input, char * output, s_table table, tree root, int f_size) {
-  double allstarttime, allendtime;
-  allstarttime = MPI_Wtime();
-  
+/*
+ * Compression function, will translate each character in its corresponding encoding
+ * And print it on the output file
+ * Parallelization added thanks to MPI
+ */
+int compress(char * input, char * output, s_table table, int f_size) {
   MPI_File fh_input;
   MPI_Status status;
   MPI_Offset file_size;
   MPI_File_open(MPI_COMM_WORLD, input, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh_input);
-  //MPI_File_open(MPI_COMM_WORLD, output, MPI_MODE_RDWR, MPI_INFO_NULL, &fh_output);
   MPI_File_get_size(fh_input, &file_size);
   
   int to_read = file_size/mpi_size;
@@ -202,10 +100,11 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
   int index = 1;
   char c = input_buf[0];
 
-  double starttime, endtime;
-
-  starttime = MPI_Wtime();
-  while(index <= to_read) {
+  /*
+   * Main job done by each process
+   * Conversion of its part of the file and save it in a buffer
+   */ 
+  while (index <= to_read) {
     total_occ++;
     entry = get_entry(table, c);
     if (entry == NULL) return -1;
@@ -219,22 +118,15 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
 	buf_size *= 2;
 	if (old_buf != NULL) free(old_buf);
       }
-    } //else {
-	//to_print = to_print<<1;
-      //}
-      c = input_buf[index];
-      index++;
+    }
+    c = input_buf[index];
+    index++;
   }
-  endtime = MPI_Wtime();
-  printf("That took %f seconds for %d\n", endtime-starttime, mpi_rank);
-  
-  // modify this part in order to write when we receive the data
-  // should be quite simple and a good gain of time
 
+  /*
+   * Job of the primary process, will wait for the (mpi_size - 2) process to end
+   */
   if (mpi_rank + 1 == mpi_size) {
-    double starttime, endtime;
-    
-    starttime = MPI_Wtime();
      
     int final_size = 0; 
     int * buf_sizes = (int*) malloc(sizeof(int)*(mpi_size-1));
@@ -242,8 +134,6 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
       MPI_Recv(buf_sizes+i, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
       final_size += buf_sizes[i];
     }
-    endtime = MPI_Wtime();
-    printf("Waiting for everyone took %f seconds\n", endtime-starttime);
     
     
     final_size += total_size;	
@@ -261,9 +151,6 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
       MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
       MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
     }
-
-    
-    starttime = MPI_Wtime();
      
     f_output = fopen(output, "a");
     fseek(f_output, 0, SEEK_END);	
@@ -278,16 +165,13 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
 	to_print = 0;
       }
     }
-	
+
     if (curr_size != 0) {
       if (curr_size != 8) {
 	to_print = to_print << (8-curr_size);
       }
       fputc(to_print, f_output);
     }
-
-    endtime = MPI_Wtime();
-    printf("Writting in the file took %f seconds\n", endtime-starttime);
     
     if (buf != NULL) free(buf);
     fclose(f_output);
@@ -299,7 +183,6 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
 
     MPI_Send(&total_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
 
-    //MPI_File_seek(fh_output, 0, MPI_SEEK_END);
     if (mpi_rank != 0) {
       MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
       MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
@@ -328,10 +211,6 @@ int compress_mpi(char * input, char * output, s_table table, tree root, int f_si
 
     MPI_File_close(&fh_input);
   } 
-  //char * buffer = malloc(sizeof(char)*total_size);
-  //read(tube[0], buffer, total_size);
-  allendtime = MPI_Wtime();
-  printf("It took in total %f for %d\n", allendtime-allstarttime, mpi_rank);
   
   return 0;
 }
@@ -389,15 +268,15 @@ int decompress(FILE * input, FILE * output) {
 }
 
 int test(char * input) {
-  FILE * input_file = fopen(input, "r");
   int f_size;
   s_table table = generate_table(input, &f_size);
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
 
-  FILE * output = fopen("test_compressed_output.txt", "w");
-  compress(input_file, output, table, root, f_size);
-  fclose(output);
+  char * output = (char *) "test_compressed_output.txt";
+  FILE * output_file = fopen(output, "w");
+  compress(input, output, table, f_size);
+  fclose(output_file);
 
   char tree_filename[] = "test_tree.txt";
   export_tree(root, tree_filename);
@@ -430,7 +309,7 @@ void process_compression(char * input, char * output) {
   tree root = convert_from_tbl(table);
   fill_encoding(root, table);
   
-  compress_mpi(input, output, table, root, f_size);
+  compress(input, output, table, f_size);
   fclose(input_file);
 
   MPI_Finalize();
