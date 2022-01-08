@@ -38,9 +38,11 @@ The compression part proceed in a different way. A problem of this part is that 
 And, we could think that there is no reason to parallelize this part, but there is one job that is done by each process that can be done by all of them during the same time.\\
 Each of them, before writing in the output file will produce a buffer containing the compressed data.\\
 This job include walking through the hashtable several times and some computation. This isn't a truly expensive job so the gain from this parallelization isn't as big as expected but it is still an interesting algorithm.\\
-
-\textbf{*describe the compression algorithm*}
-
+\\
+Due to the problem that I spoke earlier, each process will have to write sequentially and in order.\\
+Also, our process are writing sequence of bits, so when it is done writing, it might not have wrote everything is supposed to.\\
+For example, if the process \textit{i} was about to write a new byte containing the sequence "0010" but has nothing else to put to complete the byte, it will have to transmit what it was going to write ("0010") to the next process \textbf{i+1} in order for it to complete the byte with bits that it is supposed to write.\\
+This mechanism create an one-to-one communication between each process \textbf{i} to a process \textbf{i+1}.\\
 Here is a diagram of the communication when we're using 4 process :
 \begin{figure}[H]
 \centering
