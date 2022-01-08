@@ -113,9 +113,9 @@ int compress(char * input, char * output, s_table table, int f_size) {
       total_size++;
       if (total_size >= buf_size) {
 	char * old_buf = buf;
-	buf = (char *) malloc(sizeof(char)*(buf_size*2));
+	buf = (char *) malloc(sizeof(char)*(buf_size*1.5));
 	for (int i = 0; i < buf_size; i++) { buf[i] = old_buf[i] ; }
-	buf_size *= 2;
+	buf_size *= 1.5;
 	if (old_buf != NULL) free(old_buf);
       }
     }
@@ -124,98 +124,86 @@ int compress(char * input, char * output, s_table table, int f_size) {
   }
 
   /*
-   * Job of the primary process, will wait for the (mpi_size - 2) process to end
-   */
-  if (mpi_rank + 1 == mpi_size) {
-     
+   * One process has to collect every buffer size of each process in order
+   * to write our metadata before starting writing into the output file
+   */ 
+  if (mpi_rank == 0) {
     int final_size = 0; 
     int * buf_sizes = (int*) malloc(sizeof(int)*(mpi_size-1));
-    for (int i = 0; i < mpi_size - 1; i++) {
+    for (int i = 1; i < mpi_size; i++) {
       MPI_Recv(buf_sizes+i, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
       final_size += buf_sizes[i];
     }
     
-    
     final_size += total_size;	
     int padding = (final_size%8 == 0 ? 0 : 8 - final_size%8);
-
+    
     FILE * f_output = fopen(output, "w");
     write_table(f_output, table, padding, file_size, (final_size/8)+(final_size%8 != 0 ? 1 : 0));
     fclose(f_output);
-    
-    char to_print = 0;
-    int curr_size = 0;
 
-    MPI_Send(&curr_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-    if (mpi_size != 1) {
-      MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
-      MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank-1, 0, MPI_COMM_WORLD, &status);
-    }
-     
-    f_output = fopen(output, "a");
-    fseek(f_output, 0, SEEK_END);	
-    for (int i = 0; i < total_size; i++) {
-      if (curr_size != 0) { to_print = to_print<<1; }
-      to_print = to_print | (buf[i] - '0');
-      curr_size++;
+  } else {
+    MPI_Send(&total_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+  }
+  
+  int curr_size = 0;
+  char to_print = 0;
+
+  /*
+   * Waiting to receive informations about the process previous writing
+   */
+  if (mpi_rank != 0) {
+    MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
+    MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
+  }
+
+  /*
+   * Open the file, write in it and close it
+   * In order for the other process to access it
+   */
+  FILE * f_output = fopen(output, "a");
+  fseek(f_output, 0, SEEK_END);	
+  for (int i = 0; i < total_size; i++) {
+    if (curr_size != 0) { to_print = to_print<<1; }
+    to_print = to_print | (buf[i] - '0');
+    curr_size++;
 	
-      if (curr_size == 8) {
-	fputc(to_print, f_output);
-	curr_size = 0;
-	to_print = 0;
-      }
+    if (curr_size == 8) {
+      fputc(to_print, f_output);
+      curr_size = 0;
+      to_print = 0;
     }
+  }
 
+  if (mpi_rank + 1 == mpi_size) {
+    /*
+     * If it is the last process writing in the file
+     * We might have to add some padding
+     */
     if (curr_size != 0) {
       if (curr_size != 8) {
 	to_print = to_print << (8-curr_size);
       }
       fputc(to_print, f_output);
     }
-    
-    if (buf != NULL) free(buf);
     fclose(f_output);
-    MPI_File_close(&fh_input);
-  
+    if (buf != NULL) free(buf);
   } else {
-    int curr_size = 0;
-    char to_print = 0;
-
-    MPI_Send(&total_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD);
-
-    if (mpi_rank != 0) {
-      MPI_Recv(&curr_size, 1, MPI_INT, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
-      MPI_Recv(&to_print, 1, MPI_CHAR, mpi_rank - 1, 0, MPI_COMM_WORLD, &status);
-    } else {
-      MPI_Recv(&curr_size, 1, MPI_INT, mpi_size - 1, 0, MPI_COMM_WORLD, &status);
-    }
-    
-    FILE * f_output = fopen(output, "a");
-    fseek(f_output, 0, SEEK_END);	
-    for (int i = 0; i < total_size; i++) {
-      if (curr_size != 0) { to_print = to_print<<1; }
-      to_print = to_print | (buf[i] - '0');
-      curr_size++;
-	
-      if (curr_size == 8) {
-	fputc(to_print, f_output);
-	curr_size = 0;
-	to_print = 0;
-      }
-    }
     fclose(f_output);
     if (buf != NULL) free(buf);
     
     MPI_Send(&curr_size, 1, MPI_INT, mpi_rank + 1, 0, MPI_COMM_WORLD);
     MPI_Send(&to_print, 1, MPI_CHAR, mpi_rank + 1, 0, MPI_COMM_WORLD);
-
-    MPI_File_close(&fh_input);
-  } 
-  
+  }
+    
+  MPI_File_close(&fh_input);
   return 0;
 }
 
-
+/*
+ * Decompress a file compressed by this huffman algorithm
+ * Not parallelized with MPI
+ */
 int decompress(FILE * input, FILE * output) {
   rewind(input);
 
