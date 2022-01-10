@@ -2,8 +2,22 @@ SHELL := /bin/bash
 
 all: test1 test2 test3 test4 test5
 
+random_test:
+	python3 file_generator.py 10 > rtest1.txt
+	python3 file_generator.py 100 > rtest2.txt
+	python3 file_generator.py 1000 > rtest3.txt
+	python3 file_generator.py 10000 > rtest4.txt
+	python3 file_generator.py 100000 > rtest5.txt
+	python3 file_generator.py 1000000 > rtest6.txt
+	python3 file_generator.py 10000000 > rtest7.txt
+	python3 file_generator.py 100000000 > rtest8.txt
+	python3 file_generator.py 200000000 > rtest9.txt
+	python3 file_generator.py 400000000 > rtest10.txt
+
+rtest: rtest1 rtest2 rtest3 rtest4 rtest5 rtest6 rtest7 rtest8 rtest9 rtest10
+
 # Temporary fix the "--mca opal_warn_on_missing_libcuda 0"
-RUN = time mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
+RUN = time mpirun -n 4 --mca opal_warn_on_missing_libcuda 0 ./../bin/huffman
 
 DEBUG = mpirun -n 2 --mca opal_warn_on_missing_libcuda 0 xterm -e gdb --args ./../bin/huffman
 
@@ -18,6 +32,10 @@ debug_c:
 debug_d:
 	$(DEBUG) -d test1_c.txt test1_d.txt
 
+rtest%:
+	$(RUN) -c $@.txt $@_c.txt
+	$(RUN) -d $@_c.txt $@_d.txt
+	diff $@.txt $@_d.txt
 
 test1:
 	$(RUN) -c test1.txt test1_c.txt
@@ -47,3 +65,4 @@ tree:
 
 clean:
 	rm -f test*_c.txt test*_d.txt
+	rm -f rtest*_c.txt rtest*_d.txt

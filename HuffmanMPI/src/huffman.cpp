@@ -91,7 +91,7 @@ int compress(char * input, char * output, s_table table, int f_size) {
   
   s_entry entry = NULL;
 
-  int buf_size = f_size;
+  int buf_size = f_size/mpi_size;
   char * buf = (char *) malloc(sizeof(char)*buf_size);
   
   int total_size = 0;
