@@ -69,3 +69,26 @@ So in order for the process \textbf{i} to complete its job, it would have to com
 \\
 And in order for that to work, a process \textbf{i+1} would have to transmit the missing bits to the previous process \textbf{i}. But how can it determine how much bits are missing ?\\
 For now, I don't have a solution to this question. If I found one, I would be able to try to parallelize the decompression, but I'm not sure that it would have a huge impact on the performance.
+
+\section{Results}
+It is hard for me to study the performance of my algorithm for 2 reasons :
+\begin{itemize}
+	\item It seems like when the file get too big, the program will crash due to a memory allocation too big to be handled.
+	\item Also, I wasn't able to use Grid'5000, launching my MPI version on Grid'5000 crash for an unknown reason.
+\end{itemize}
+But I was still able to have a glance to the gains offered by my version.\\
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{img/chart.png}
+    \caption{Chart produced using the simple "time" unix tool}
+    \label{fig:my_label}
+\end{figure}
+Each segment correspond to a different type of execution :
+\begin{itemize}
+	\item huffman.std : Execution done by my standard version of the Huffman Algorithm
+	\item huffman.mpi.\textbf{n} : Execution done by my MPI version of the Huffman Algorithm, using \textbf{n} process
+\end{itemize}
+
+\section{Conclusion}
+It is indeed possible to upgrade a Huffman algorithm using parallelization but the upgrade has to be study well before being implemented, because this algorithm is fundamantally executed sequentially.\\
+In my study I have only done upgrades on the compression part, and for now, I don't have any idea for an upgrade of the decompression part.
