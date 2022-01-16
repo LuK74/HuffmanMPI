@@ -9,7 +9,10 @@ Option :
 -d/--decompression = Decompress [input_filename] and outputs it as [output_filename] if furnished, if not as result_decompression.txt
 
 -t/--test = Will compress and decompress the file named [input_filename], and output a file representing the tree used for the compression
-
+    
+Example :    
+- ./huffman -c test1.txt test1_c.txt    
+- ./huffman -d test1_c.txt test1_d.txt
 ## Architecture
 There is two mains folders :  
 - HuffmanMPI : Contains the parallelized version of my Huffman algorithm   
