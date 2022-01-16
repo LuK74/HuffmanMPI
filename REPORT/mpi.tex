@@ -1,8 +1,8 @@
 \section{How can we improve it with MPI ?}
-In this section, we'll talk about hashtables (of my personnal design, because it allowed to add some optimization in the hashtables itselves).
+In this section, we'll talk about hashtables (of my personnal design, because it allowed me to add some optimization in the hashtables itselves, optimizations that I know would be efficient for Huffman algorithm, for example, the array used to store the entries of the hashtable is order in an ascending order according to the frequency of the character associated to the entry. Since they will be the characters looked for the most, it is interesting to put some in the first positions of the array).
 
 \subsection{Occurences counting}
-The counting of the number of occurences for each character is a part where parallisation can be very interesting.\\
+The counting of the number of occurences for each character is a part where parallization can be very interesting.\\
 The current design of my MPI version of this part is the following :\\
 \begin{itemize}
 	\item Each process create a personnal hashtable and a final hashtable
@@ -83,7 +83,7 @@ But I was still able to have a glance to the gains offered by my version.\\
     \caption{Chart produced using the simple "time" unix tool}
     \label{fig:my_label}
 \end{figure}
-Each segment correspond to a different type of execution :
+Each segment correspond to a different type of execution, the y axis corresponds to the execution time (measured in seconds) and the x axis corresponds to the size of the file :
 \begin{itemize}
 	\item huffman.std : Execution done by my standard version of the Huffman Algorithm
 	\item huffman.mpi.\textbf{n} : Execution done by my MPI version of the Huffman Algorithm, using \textbf{n} process
@@ -91,4 +91,4 @@ Each segment correspond to a different type of execution :
 
 \section{Conclusion}
 It is indeed possible to upgrade a Huffman algorithm using parallelization but the upgrade has to be study well before being implemented, because this algorithm is fundamantally executed sequentially.\\
-In my study I have only done upgrades on the compression part, and for now, I don't have any idea for an upgrade of the decompression part.
+In my project, I have only done upgrades on the compression part, and for now, I don't have any idea for an upgrade of the decompression part.

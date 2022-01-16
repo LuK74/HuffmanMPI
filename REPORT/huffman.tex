@@ -35,19 +35,16 @@ This is done following a simple principle, the encoding of a character correspon
 For example, for the character 'p' we'll have : "10011".\\
 Using this, it is quite easy to generate an encoding for each character, but it also very easy to decode a file.\\
 \\
-Let's imagine we're decoding a file contaning these "10011 11000 000 000 1011" (the file will not actually containe these, it will contain the characters encoding by those bits).\\
+Let's imagine we're decompressing a file contaning these "10011 11000 000 000 1011" (the file will not actually containe these, it will contain the characters encoding by those bits).\\
 In order to decode this, we'll simply have to explore the tree following the direction given by the bit.\\
 For example, for "10011", we'll go right, left, left, right and finally right, and we would end up in the leaf of the character "p". After that we can go back to the root and begin to do that again.\\
 \\
 And this is where one property of this encoding is interesting, using this algorithm we generate what we call a "prefix encoding", which is an encoding where each code isn't suffix of any other. This property is fundamental for this algorithm.
 
-\subsection{Specific and issues}
-I have been against several issues, but I will only talk about the most interesting ones.
-
-\subsubsection{Padding}
-Let's imagine we want to encode the following word "press", which is encoded by this "10011 11000 000 000 1011", here I have put spaces in order to make it more clear about which sequence corresponds to which character, but in reality this isn't that simple.\\
+\subsection{Padding issue}
+Let's imagine we want to compress the following word "press", which is encoded by this "10011 11000 000 000 1011", here I have put spaces in order to make it more clear about which sequence corresponds to which character, but in reality this isn't that simple.\\
 In our file, we're only writting characters, sequence of bytes, so our algorithm would rather write it this way "10011110 00000000 1011". And there is the issue, we can't write half a byte in a file, so our last sequence needs to be completed, to be larger.\\
-We could simply add 4 zeros in order to have a full byte but we would still have an issue, if in our new encoding there is a character encoding by "0", "00", "000", or "0000", we would decode a character that wasn't in the original file.\\
+We could simply add 4 zeros in order to have a full byte but we would still have an issue, if in our new encoding there is a character encoded by "0", "00", "000", or "0000", we would decode a character that wasn't in the original file.\\
 \\
 I found 2 ways to fix this issue :
 \begin{itemize}
