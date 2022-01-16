@@ -2,31 +2,17 @@ SHELL := /bin/bash
 
 all: test1 test2 test3 test4 test5
 
-test1:
-	time ./../bin/huffman -c test1.txt test1_c.txt
-	time ./../bin/huffman -d test1_c.txt test1_d.txt
-	diff test1.txt test1_d.txt
 
-test2:
-	time ./../bin/huffman -c test2.txt test2_c.txt
-	time ./../bin/huffman -d test2_c.txt test2_d.txt
-	diff test2.txt test2_d.txt
+gtest:
+	python3 file_generator.py 10 > test1.txt
+	python3 file_generator.py 100 > test2.txt
+	python3 file_generator.py 1000 > test3.txt
+	python3 file_generator.py 10000 > test4.txt
+	python3 file_generator.py 100000 > test5.txt
 
-test3:
-	time ./../bin/huffman -c test3.txt test3_c.txt
-	time ./../bin/huffman -d test3_c.txt test3_d.txt
-	diff test3.txt test3_d.txt
-
-test4:
-	time ./../bin/huffman -c test4.txt test4_c.txt
-	time ./../bin/huffman -d test4_c.txt test4_d.txt
-	diff test4.txt test4_d.txt
-
-test5:
-	time ./../bin/huffman -c test5.txt test5_c.txt
-	time ./../bin/huffman -d test5_c.txt test5_d.txt
-	diff test5.txt test5_d.txt
-
-
+test%:
+	time ./../bin/huffman -c $@.txt $@_c.txt
+	time ./../bin/huffman -d $@_c.txt $@_d.txt
+	diff $@.txt $@_d.txt
 clean:
 	rm -f test*_c.txt test*_d.txt	

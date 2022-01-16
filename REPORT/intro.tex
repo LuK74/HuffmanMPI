@@ -12,8 +12,8 @@ Hello World!
 Hello France!
 Hello Grenoble!
 \end{verbatim}
-The main idea of the Huffman Algorithm is to compute the total occureces of each character in the file in order to give them a new encoding which size is related to the total number of occurences.\\
-For exemple in our case, we see that the character "G" is appearing only one time, contrary to the character "l" which is appaearing eight times. So, the new encoding for the character "G" will be longer than "l" encoding.\\
+The main idea of the Huffman Algorithm is to compute the total number of occurences of each character in the file in order to give them a new encoding which size is related to the total number of occurences.\\
+For exemple in our case, we see that the character "G" is appearing only one time, contrary to the character "l" which is appearing eight times. So, the new encoding for the character "G" will be longer than "l" encoding.\\
 We'll discuss more in detail how those new encoding are generated in the next section.\\
 \\
 So, what's the aim of my project ? I'll first implement the Huffman Algorithm using basic C++ in order to be able to compare its performances with the new version I'll implement, the parallelize one (using MPI).\\
@@ -30,7 +30,7 @@ F:0000010
 d:0000011
 W:000010
 n:000011
-
+               // newline character
 :00010
 !:00011
 r:0010

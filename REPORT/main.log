@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021) (preloaded format=pdflatex 2022.1.6)  10 JAN 2022 15:07
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021) (preloaded format=pdflatex 2022.1.6)  16 JAN 2022 16:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -735,7 +735,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 43--1
 
  []
 
-<img/huffmanTree.png, id=57, 2890.8pt x 1858.945pt>
+<img/huffmanTree.png, id=61, 2890.8pt x 1858.945pt>
 File: img/huffmanTree.png Graphic file (type png)
 <use img/huffmanTree.png>
 Package pdftex.def Info: img/huffmanTree.png  used on input line 11.
@@ -756,7 +756,7 @@ Overfull \hbox (4.54887pt too wide) in paragraph at lines 25--25
 he occurences computed previously[] 
  []
 
-<img/huffmanTreeE.png, id=65, 2890.8pt x 1858.945pt>
+<img/huffmanTreeE.png, id=69, 2890.8pt x 1858.945pt>
 File: img/huffmanTreeE.png Graphic file (type png)
 <use img/huffmanTreeE.png>
 Package pdftex.def Info: img/huffmanTreeE.png  used on input line 29.
@@ -808,7 +808,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 64--72
  []
 
 [5]
-<img/chart.png, id=85, 453.94594pt x 251.06297pt>
+<img/chart.png, id=89, 453.94594pt x 251.06297pt>
 File: img/chart.png Graphic file (type png)
 <use img/chart.png>
 Package pdftex.def Info: img/chart.png  used on input line 82.
@@ -822,20 +822,14 @@ Underfull \hbox (badness 10000) in paragraph at lines 79--85
 
 LaTeX Warning: There were multiply-defined labels.
 
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: 6981814176DCF813FE215B25D6C62D10;1529
-(rerunfilecheck)             After:  4877960130AC298E94A09039508CCB3C;1623.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: 4877960130AC298E94A09039508CCB3C;1623.
  ) 
 Here is how much of TeX's memory you used:
- 21796 strings out of 480284
- 406154 string characters out of 5895704
- 697234 words of memory out of 5000000
- 39301 multiletter control sequences out of 15000+600000
+ 21797 strings out of 480284
+ 406165 string characters out of 5895704
+ 696234 words of memory out of 5000000
+ 39302 multiletter control sequences out of 15000+600000
  409138 words of font info for 46 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  89i,11n,83p,414b,714s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -848,10 +842,10 @@ r/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb></u
 sr/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi10.pfb></u
 sr/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></us
 r/local/texlive/2021/texmf-dist/fonts/type1/public/cm-super/sfss1000.pfb>
-Output written on main.pdf (6 pages, 654633 bytes).
+Output written on main.pdf (6 pages, 654975 bytes).
 PDF statistics:
- 135 PDF objects out of 1000 (max. 8388607)
- 104 compressed objects within 2 object streams
+ 138 PDF objects out of 1000 (max. 8388607)
+ 107 compressed objects within 2 object streams
  23 named destinations out of 1000 (max. 500000)
- 108 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 116 words of extra memory for PDF output out of 10000 (max. 10000000)
 
